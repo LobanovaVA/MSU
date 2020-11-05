@@ -1,0 +1,1 @@
+int test(char *buf, int i, const char *s, int j);

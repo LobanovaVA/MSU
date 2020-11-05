@@ -1,0 +1,441 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\usepackage{mdframed}
+\usepackage{anyfontsize}
+\usepackage{amsmath}
+\usepackage{mathtext} 			
+\usepackage{amsmath,amsfonts,amssymb,amsthm,mathtools} 
+\usepackage[colorlinks,linkcolor=black]{hyperref}
+\mathtoolsset{showonlyrefs=true} % Показывать номера формул, на которые есть \eqref{} в тексте.
+\setlength{\parindent}{0ex} % Красная строка размера ex
+
+\title{\textbf{Отчёт по заданию \\ "Системы нелинейных уравнений"}}
+\author{Лобанова Валерия, группа 208}
+\date{ }
+
+\begin{document}
+
+% Обложка
+%\pagestyle{empty}
+\maketitle
+\thispagestyle{empty} 
+% Содержание
+\newpage
+\tableofcontents{}
+
+
+
+
+
+\newpage
+% Система
+\section{\textcolor{Fuchsia}{Задача}}
+\par\bigskip
+Найти решение $ (x,y) \in \mathbb{R}^2$ системы
+
+\begin{equation}
+    \label{eq:syst1}
+    \text{$ F\,(x, y, \alpha) = $ }
+    \left\{
+        \begin{array}{lcl} 
+            4x + \sin^2 \frac{1}{1+x^2} + \sin^2 \frac{1}{1+y^2}& = &\alpha \\ 
+            \frac{1}{1+x^2+y^2} + 2 \tg y & = &0 \\ 
+        \end{array} 
+    \right. 
+\end{equation} 
+где $ \alpha \in \mathbb{R} $ -- произвольно.
+
+
+
+% Теорема
+\section{\textcolor{Mulberry}{Теорема}}
+\par\bigskip
+Пусть:
+\begin{enumerate}\label{lst:th}
+\item $X$ -- полное нормированное пространство
+\item $ \Omega \subset X, \: \overline{\Omega} = \Omega$ -- замкнутое множество
+\item отображение $ F: \Omega \times A \mapsto \Omega $
+\item $ \forall\,\overline{x} \in \Omega \;\; 
+        \exists F'_{\overline{x}}\,(\overline{x}, \alpha) = $
+        \large$\frac{\partial F(\,\overline{x}, \alpha)}
+        {\partial \overline{x}} $ \normalsize
+\item $ \forall\,\overline{x} \in \Omega , \: \forall \alpha \in A \;\; 
+        \bigl\| F'_{\overline{x}}\,(\overline{x}, \alpha) \bigr\| \, \leq q < 1 $
+\item $ \forall\,\overline{x} \in \Omega $ 
+        отображение $ F\,(\overline{x}, \alpha) $ 
+        непрерывно по $\alpha$ в точке $\alpha_0$
+\item $ \Omega $ -- выпуклое множество
+\end{enumerate}
+Тогда:
+\begin{enumerate}
+\item $F$ -- сжимающее отображение
+\item $ \exists !$ решение $\overline{x}_* =
+        \overline{x}_*(\alpha) \; F\,(\overline{x}_*)=\overline{x}_*$ 
+\item это решение $ \overline{x}_* = \lim\limits_{k\to\infty}\overline{x}_k, 
+        \;\; \overline{x}_k = \overline{x}_k(\alpha), \; 
+        \overline{x}_{k+1} = F\,(\overline{x}_k,\alpha)$ 
+\item скорость сходимости 
+        $ \rho\,(\overline{x}_k, \overline{x}_*) \leq $ 
+        \large $ \frac{q^k}{1-q} $ \normalsize
+        $ \rho\,(\overline{x}_0,\overline{x}_1), 
+        \; 0 \leq q < 1 $
+\item $ \overline{x}_*(\alpha)$ непрерывна в точке $ \alpha_0 $
+\end{enumerate}
+
+
+
+
+% Исследование отображения
+\newpage
+\section{\textcolor{Rhodamine}{Исследование отображения}}
+\par\bigskip
+
+% Преобразование исходной системы
+\subsection{Преобразование исходной системы}
+
+Приведём исходную систему~\eqref{eq:syst1} к виду
+$$
+    \left\{
+        \begin{array}{ccc} 
+            f_1\,(x, y, \alpha) & = & x \\ 
+            f_2\,(x, y, \alpha) & = & y \\
+        \end{array} 
+    \right. 
+$$
+
+Видно, что для первой строки системы~\eqref{eq:syst1} 
+достаточно перенести cлагаемые $4x$ и $\alpha$ \\
+в противоположные части уравнения, а затем умножить обе части на $\left(-\frac14\right)$.
+\par\medskip
+Ко второй строке системы~\eqref{eq:syst1} применим преобразование хитрее.\\
+Для выкладок заменим $ 1+x^2+y^2 $ на $P$, тогда 
+$$
+    \frac{1}{1+x^2+y^2} + 2 \tg y  = 0  \;\Rightarrow\;
+    \frac1P + 2 \tg y  = 0              \;\Rightarrow\;
+    \frac1{-2P} = \tg y                 \;\Rightarrow\; 
+    \arctg\left(-\frac1{2P}\right) + \pi z = y,\;z \in \mathbb{Z}
+$$
+Теперь преобразуем получившийся арктангенс:
+$$
+    y -\pi z= \arctg\left(-\frac1{2P}\right) =    
+    -\arctg\left(\frac1{2P}\right) =
+    \left[ P > 0 \right] =
+    -\left( \frac\pi2 - \arctg2P \right) = 
+    \arctg2P - \frac\pi2 
+$$
+
+Итак, получим, что система ~\eqref{eq:syst1} эквивалентна\footnote{
+$z \in \mathbb{Z}$ заменили на $n \in \mathbb{N}_0$ с обратным знаком из-за условия на систему  $y < 0$, которе хоть и очевидно, но будет строго выведено позже}:
+\begin{equation}\label{eq:syst2}
+    \text{$ \widetilde{F}\,(x, y, \alpha) = $ }
+    \left\{
+        \begin{array}{ccccl} 
+            f_1\,(x, y, \alpha) & = & -\frac14 
+            \left( \sin^2 \frac1{1+x^2} + \sin^2 \frac1{1+y^2} - \alpha \right)
+            & = & x \\
+            \\
+            f_2\,(x, y, \alpha) & = & 
+            \arctg\,(2(1+x^2+y^2)) - \frac\pi2 - \pi n& = & y,\;\;n \in \mathbb{N}_0\\
+        \end{array} 
+    \right. 
+\end{equation}
+
+
+
+% Вычисление Якобиана отображения
+\newpage
+\subsection{Вычисление Якобиана отображения}
+\par\bigskip
+
+Посчитаем Якобиан отображения, заданного системой~\eqref{eq:syst2}. \\
+Заметим, что достаточно посчитать производные по $x$ -
+исходя из симметричности формул, производные по $y$ легко восстанавливаются.
+
+\begin{equation*}\begin{split}
+    \frac{\partial f_1(x, y, \alpha)}{\partial x}  = 
+    \left( -\frac14 \left( \sin^2 \frac1{1+x^2} + 
+    \sin^2 \frac1{1+y^2} - \alpha\right)\right)'_x =
+    -\frac14 \left( \sin^2 \frac1{1+x^2}\right)'_x = \\\\ =
+    -\frac14 \left( 2\sin\frac1{1+x^2}\cos\frac1{1+x^2}\right)
+    \frac{-2x}{(1+x^2)^2} = 
+    \frac x{2(1+x^2)^2} \; \sin\left(\frac2{1+x^2}\right) 
+\end{split}\end{equation*}
+
+\par\bigskip
+
+\begin{equation*}\begin{split}
+    \frac{\partial f_2(x, y, \alpha)}{\partial x}  = 
+    \left( \arctg\,(2(1+x^2+y^2)) - \frac\pi2\right)'_x =
+    \Bigl( \arctg\,(2(1+x^2+y^2))\Bigr)'_x = \\\\ =
+    \frac{2\cdot2x}{1+(2(1+x^2+y^2))^2} =
+    \frac{4x}{1+4(1+x^2+y^2)^2}
+\end{split}\end{equation*}
+
+\par\bigskip\par\bigskip
+
+Полученный Якобиан назовем $J$:
+\large
+\begin{equation}\label{eq:jacobian}
+    \text{\large$ J = J_{\widetilde{F}\,(x, y, \alpha)} = $ \normalsize}
+    \left(
+        \begin{array}{cc}
+        \frac x{2(1+x^2)^2} \sin\left(\frac2{1+x^2}\right) \quad  &
+        \frac y{2(1+y^2)^2} \sin\left(\frac2{1+y^2}\right) 
+        \\
+        \\
+        \frac{4x}{1+4(1+x^2+y^2)^2} &
+        \frac{4y}{1+4(1+x^2+y^2)^2}
+    \end{array}
+    \right) 
+\end{equation}
+\normalsize
+
+
+
+
+% Оценка нормы Якобиана
+\newpage
+\subsection{Оценка нормы Якобиана}
+\par\bigskip
+Для того, чтобы оценить сверху норму матрицы Якоби~\eqref{eq:jacobian},
+оценим сверху максимум \\ модуля каждого её элемента\footnote{
+Исользуется стандартная нумерация элементов матрицы}. 
+\par\bigskip
+$$
+    \left|\, j_{11} \right| =
+    \left| \frac x{2(1+x^2)^2} \sin\left(\frac2{1+x^2}\right) \right| \leq
+    \left| \frac x{2(1+x^2)^2} \right| =
+    \lvert \;\widetilde{j_{11}} (x) \:\rvert
+$$
+\par\bigskip
+В силу нечетности $\widetilde{j_{11}} (x)$ видим, что 
+$
+    \max\,\lvert \;\widetilde{j_{11}} (x) \:\rvert = 
+    \max_{x\,\geq\,0 }\,\widetilde{j_{11}}(x) .
+$
+\par\bigskip
+Посчитаем производную $\widetilde{j_{11}}(x)$:
+\begin{equation}\begin{split}\label{eq:dj11}
+    \left(\widetilde{j_{11}}(x) \right)'_x =
+    \left(\frac x{2(1+x^2)^2} \right)'_x =
+    \frac 1{4(1+x^2)^4} \cdot \left( 2(1+x^2)^2 - 2 \cdot 2(1+x^2) 
+    \cdot 2x \cdot x\right) = \\
+    \frac 1{2(1+x^2)^3} \cdot \left( 1+x^2-4x^2 \right) =
+    \frac {1-3x^2}{2(1+x^2)^3}
+\end{split}\end{equation}
+
+Приравняем~\eqref{eq:dj11} нулю и найдем точки экстремума:
+$$
+    \frac {1-3x^2}{2(1+x^2)^3} = 0 \;\Rightarrow\;
+    1-3x^2 = 0 \;\Rightarrow\; x_e = \pm \frac 1{\sqrt{3}}
+$$
+
+Функция $\widetilde{j_{11}}(x)$ возрастает на промежутке 
+$ \left[-\frac 1{\sqrt{3}} ; \frac 1{\sqrt{3}}  \right] \;\Rightarrow\; $
+
+$$
+    \;\Rightarrow\;
+    \max_{x\,\geq\,0 }\,\widetilde{j_{11}}(x) = 
+    \widetilde{j_{11}} \left( \frac 1{\sqrt{3}} \right) =
+    \frac { \frac 1{\sqrt{3}} }{2(1+\frac13)^2} = 
+    \frac{3\sqrt{3}}{32} < 0,17 \;\Rightarrow\;
+    \left|\, j_{11} \right| < 0,17
+$$
+
+\par\bigskip
+Аналогично оценивается $\left|\, j_{12} \right| < 0,17 $.
+\par\bigskip\par\bigskip
+$$
+    \left|\, j_{21} \right| =
+    \left| \frac{4x}{1+4(1+x^2+y^2)^2} \right| \leq
+    \left| \frac{x}{(1+x^2+y^2)^2} \right| \leq
+    \left[\,x^2, y^2 \geq 0 \,\right] \leq
+    \left| \frac{x}{1+x^2} \right| =
+    \lvert \;\widetilde{j_{21}} (x) \:\rvert
+$$
+\par\bigskip
+Дальше считаем производную $\widetilde{j_{21}}(x)$, приравниваем её к нулю, 
+находим точки экстремума:
+
+\begin{equation*}\begin{split}
+    \left(\widetilde{j_{21}}(x) \right)'_x =
+    \left(\frac{x}{1+x^2} \right)'_x =
+    \frac {1+x^2 - 2x\cdot x}{(1+x^2)^2} =
+    \frac {1-x^2}{(1+x^2)^2} = 0    \;\Rightarrow\; 
+    1-x^2 = 0       \;\Rightarrow \\\\ \Rightarrow\;
+    x_e = \pm1      \;\Rightarrow\;
+    \max\,\lvert \;\widetilde{j_{21}} (x) \:\rvert = 
+    \max_{x\,\geq\,0 }\,\widetilde{j_{21}}(x) = 
+    \widetilde{j_{21}}(1) = \frac12 < 1 \;\Rightarrow\;
+    \left|\, j_{21} \right| < 0,5
+\end{split}\end{equation*}
+\par\bigskip
+Аналогично оценивается $\left|\, j_{22} \right| < 0,8$.
+\par\bigskip\par\bigskip
+
+Теперь оценим норму матрицы матрицы Якоби~\eqref{eq:jacobian}:
+$$
+    \lVert J \rVert_1 = \max_k  \sum_{i=1}^2 \left|\, j_{ik} \right| =
+    \max \left\{ \lvert\;j_{11}\:\rvert + \lvert\;j_{21}\:\rvert
+           \,,\, \lvert\;j_{12}\:\rvert + \lvert\;j_{22}\:\rvert \right\}
+    < 0,17 + 0,5 = 0,67 = q < 1
+$$
+
+\begin{equation}\label{eq:q}
+    \lVert J \rVert_1 < 0,67 = q < 1
+\end{equation}
+\par\bigskip\par\bigskip
+
+
+
+% Проверка условий теоремы
+\newpage
+\subsection{Проверка условий теоремы}
+\par\bigskip
+
+Оценка нормы матрицы Якоби верна для всех $ (x,y) \in \mathbb{R}^2 $.\\ 
+Но из второго уравнения системы~\eqref{eq:syst1} следует:
+$$
+    \frac{1}{1+x^2+y^2} = -2 \tg y \;,\; 
+    \frac{1}{1+x^2+y^2} > 0              \;\Rightarrow\;
+    -2 \tg y < 0                         \;\Rightarrow\;
+    \tg y < 0                            \;\Rightarrow\;
+    y < 0  
+$$
+
+$$
+    0 \leq -2 \tg y = \frac{1}{1+x^2+y^2}   \leq
+    \left[x^2\,\geq\,0\right]               \leq
+    \frac{1}{1+y^2}                         <
+    \left[y^2\,>\,0\right] < 1              \;\Rightarrow
+$$
+
+$$
+    \;\Rightarrow\;
+    \tg y > -\frac12                \;\Rightarrow\;
+    \left[y\,<\,0\right]            \;\Rightarrow\;
+    \tg |y| <\frac12                \;\Rightarrow\;
+    y \in \left( -\arctg \frac12 - \pi n\;;\; 0 \right) \;,\,n \in \mathbb{N}_0
+$$
+
+\par\bigskip
+В свою очередь для $x$ ограничения связаны только со значением $\alpha$.
+Вычислим из первого \\ уравнения системы~\eqref{eq:syst1} эти ограничения для контроля соотношения решение-параметр:
+$$
+    4x + \sin^2 \frac{1}{1+x^2} + \sin^2 \frac{1}{1+y^2} = \alpha \;\Rightarrow\;
+    4x \leq \alpha \leq 4x + 2  \;\Rightarrow\; 
+     \alpha - 2 \leq 4x \leq \alpha   \;\Rightarrow\; 
+    x \in \left[ \frac{\alpha - 2}4 \;;\; \frac{\alpha}4 \right]
+$$
+\par\bigskip
+
+$ X = \mathbb{R}^2$ -- полное нормированное пространство.
+Областей $\Omega_n$ будет несколько - занумеруем их по числу $n$ из промежутка значений $y$:
+$$
+    \boxed{\;\Omega_0 = \mathbb{R} \times 
+    \left[ -\arctg \frac12 \;;\; 0 \right]\;}
+$$
+$$
+    \boxed{\;\Omega_n = \mathbb{R} \times 
+    \left[ -\arctg \frac12 - \pi n\;;\; -\arctg \frac12 - \pi(n-1) \right],
+    \, n \in \mathbb{N}\;}
+$$
+\par\bigskip
+Так же заметим, что для любого фиксированного $ x \in \Omega $ 
+отображение $F\,(x,y,\alpha)$ \\
+непрерывно (а именно, линейно) по $\alpha$ .
+\par\bigskip
+
+Таким образом, все условия теоремы [стр.~\ref{lst:th}]  
+выполнены для данного отображения~\eqref{eq:syst1} \\
+$F\,(x,y,\alpha) \sim \widetilde{F}\,(x, y, \alpha)$
+, и её можно использовать для решения задачи.
+
+
+
+
+% Оценка количества итераций
+\newpage
+\section{\textcolor{WildStrawberry}{{Оценка количества итераций}}}
+\par\bigskip
+
+Требуемая точность 
+$ \rho\,(x_k, x_*) < \varepsilon $;\; $q = 0,67$~\eqref{eq:q}\\
+Для оценки количества итераций используем формулу 
+$ \rho\,(x_k, x_*) \leq $ 
+\large $ \frac{q^k}{1-q} $ \normalsize
+$ \rho\,(x_0,x_1) \leq \varepsilon$
+\par\medskip
+\begin{equation}\label{eq:k1}
+     \varepsilon \geq \frac{q^k}{1-q}  \rho\,(x_0,x_1)      \;\Rightarrow\;
+    \frac{ \varepsilon\,(1-q)}{ \rho\,(x_0,x_1)} \geq q^k   \;\Rightarrow\;
+    k \leq \log_q \frac{ \varepsilon\,(1-q)}{ \rho\,(x_0,x_1)}
+\end{equation}
+\par\bigskip
+
+В качестве начального условия возьмем:
+\begin{equation}\label{eq:x0}
+    \text{$\overline{x}_0(\alpha)$ =}
+        \left(\begin{array}{c}
+            x_0(\alpha)\\
+            y_0(\alpha)
+        \end{array}\right)
+    \text{ = }
+        \left(\begin{array}{c}
+            0\\        
+            0
+        \end{array}\right) 
+\end{equation}
+
+Вычислим $\overline{x}_1(\alpha)$ и $\rho\,(\overline{x}_0, \overline{x}_1)$:
+\begin{equation}\begin{split}\label{eq:x1}
+    \text{$\overline{x}_1(\alpha)$ =}
+        \left(\begin{array}{c}
+            x_1(\alpha)\\         
+            y_1(\alpha)
+        \end{array}\right)
+    \text{ = }
+        \left(\begin{array}{c}
+            f_1\,(x_0, y_0, \alpha)\\        
+            f_2\,(x_0, y_0, \alpha)
+        \end{array}\right) 
+    \text{ = }
+        \left(\begin{array}{c}
+            -\frac14 \left( 2\sin^21 - \alpha\right)\\\\      
+            \arctg\,2 - \frac\pi2 - \pi n
+        \end{array}\right) 
+\end{split}\end{equation}
+\par\medskip
+\begin{equation}\label{eq:ro}
+    \text{$\rho\,(\overline{x}_0, \overline{x}_1)$ = }
+        \left|\left(\begin{array}{c}
+            -\frac14 \left( 2\sin^21 - \alpha\right)\\\\      
+            \arctg\,2 - \frac\pi2 - \pi n
+        \end{array}\right)\right|
+    \geq \sqrt{\left(\frac{\alpha+2}4\right)^2 + 
+    \left( -\arctg\frac12 - \pi n \right)^2} \geq 
+    \arctg(0,5)
+\end{equation}
+\par\bigskip
+
+Полученную оценку~\eqref{eq:ro} для $\rho\,(\overline{x}_0, \overline{x}_1)$ 
+подставим в~\eqref{eq:k1}:
+
+\begin{equation}\begin{split}\label{eq:k2}              
+    k \leq \log_q \frac{\varepsilon\,(1-q)}{ \rho\,(x_0,x_1)} \leq
+    \log_q \frac{\varepsilon\,(1-q)}{\arctg(0,5)} =
+    \frac{\ln\varepsilon + \ln \frac{(1-q)}{\arctg(0,5)}}{\ln q} =
+    \left[ q=0,67~\eqref{eq:q}\,\right] = \\\\ =
+    \frac{\ln\varepsilon + \ln \frac{0.33}{\arctg(0,5)}}{\ln 0,67} <
+    \frac{\ln\frac1\varepsilon +0,35}{0,04} <
+    9 - 25\ln\varepsilon      \;\Rightarrow\;
+    \boxed{ k \leq 9 - 25\ln\varepsilon }
+\end{split}\end{equation}
+\par\bigskip
+
+
+\end{document}
