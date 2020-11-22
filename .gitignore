@@ -19,6 +19,7 @@
 *.so.*
 *_pch.h.cpp
 *_resource.rc
+*.zip
 
 moc_*.cpp
 ui_*.h
