@@ -18,7 +18,7 @@ f (int s, int n, int i, int j)
       ans = j - i;
       break;
     case 4:
-      ans = 1.0 / (i + j + 1);
+      ans = 1.0 / (i + j - 1);
       break;
     default:
       printf ("Unknown parameter %d for f\n", s);

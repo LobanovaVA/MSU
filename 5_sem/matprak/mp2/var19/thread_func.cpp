@@ -11,7 +11,7 @@ thread_func (void *data)
   int *result;
   int p, k, i;
   int num = 0;
-  double sum = 0, check_with;
+  double sum = 0;
 
   p = args -> p;
   k = args -> k;
@@ -37,8 +37,10 @@ thread_func (void *data)
       num += shared_num[i];
     }
 
-  check_with = (num) ? sum / num : 0;
-  result[k] = count_greater_than (files[k], check_with);
+  if (num)
+    result[k] = count_greater_than (files[k], sum / num);
+  else
+    result[k] = 0;
 
   pthread_barrier_wait (args -> barrier);
   return nullptr;

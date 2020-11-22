@@ -32,8 +32,8 @@ count_sum_and_num (const char *filename, double *sum__, int *num__)
           return ERROR_CANNOT_READ_INPUT_FILE;
         }
       fclose (fp);
-      *sum__ = prev;
-      *num__ = 1;
+      *sum__ = 0;
+      *num__ = 0;
       return SUCCESS;
     }
 

@@ -12,7 +12,7 @@ all : process
 process  : $(OBJS)
 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
 
-main.o : main_no_arr.cpp addition.h
+main.o : main.cpp addition.h
 	$(CC) $(CFLAGS) $< -o $@
 
 thread_func.o : thread_func.cpp addition.h

@@ -21,8 +21,15 @@
 #include <fenv.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <sched.h>
+#include <sys/sysinfo.h>
 
-constexpr double EPS = 1.e-16;
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+constexpr double EPS = 1.e-15;
 using matr = double *;
 using vect = double *;
 

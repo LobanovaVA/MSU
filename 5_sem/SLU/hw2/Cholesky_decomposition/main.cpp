@@ -4,6 +4,13 @@ int
 main (int argc, char *argv[])
 {
   feenableexcept (FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW);
+
+  cpu_set_t cpu;
+  CPU_ZERO (&cpu);
+  CPU_SET (get_nprocs() - 1, &cpu);
+
+  sched_setaffinity (getpid(), sizeof (cpu), &cpu);
+
   char *file_name;
   int matrix_size, block_size, print_size, mode;
   int ret;
@@ -200,7 +207,7 @@ main (int argc, char *argv[])
       delete[] block_R2;
       delete[] block_A;
       delete[] block_vector_D;
-      printf ("Time solve func = %.4lf\n", time_solve);
+      printf ("Time part of solve func = %.4f\n", time_solve);
       return -7;
     }
 
@@ -224,10 +231,11 @@ main (int argc, char *argv[])
   time_residue = (clock () - time_residue) / CLOCKS_PER_SEC;
   diff_ans = norm_x_x0 (matrix_size, vector_X);
 
-  printf ("Time solve func = %.4lf\n", time_solve);
-  printf ("Time culc norm  = %.4lf\n", time_residue);
+  printf ("Time solve func = %.4f\n", time_solve);
+  printf ("Time culc norm  = %.4f\n", time_residue);
   printf ("Diff ans =%10.3e\n", diff_ans);
-  printf ("Residual =%10.3e for s = %d n = %d m = %d\n", residue, mode, matrix_size, block_size);
+  printf ("%s : residual = %e elapsed = %.2f for s = %d n = %d m = %d\n",
+          argv[0], residue, time_solve, mode, matrix_size, block_size);
 
   delete[] matrix;
   delete[] vector_B;

@@ -48,13 +48,11 @@ cholesky_symm_storage (int size, matr A, vect D, double norm)
           sum -= r_ki * r_ki * D[k];
         }
 
-      D[i] = (sum < 0) ? -1 : 1;
-      if (is_small (A[get_IND (i, i, size)], EPS * norm))
+      if (is_small (sum, EPS * norm))
         return ERROR_EPS;
 
+      D[i] = (sum < 0) ? -1 : 1;
       r_ii = sqrt (fabs (sum));
-      if (is_small (r_ii, EPS * norm))
-        return ERROR_EPS;
 
       inv_d_i_r_ii = D[i] / r_ii;
       A[get_IND (i, i, size)] = r_ii;
@@ -111,13 +109,12 @@ cholesky_not_symm_storage (int size, int shift, matr A, vect D, double norm)
           sum -= r_ki * r_ki * D[k];
         }
 
+      if (is_small (sum, EPS * norm))
+        return ERROR_EPS;
       D[i] = (sum > 0) ? 1 : -1;
-      if (is_small (A[i * shift + i], EPS * norm)) //можно убрать
-        return ERROR_EPS;
-
       r_ii = sqrt (fabs (sum));
-      if (is_small (r_ii, EPS * norm))
-        return ERROR_EPS;
+//      if (is_small (A[i * shift + i], EPS * norm)) //можно убрать
+//        return ERROR_EPS;
 
       inv_d_i_r_ii = D[i] / r_ii;
       A[i * shift + i] = r_ii;
@@ -184,9 +181,6 @@ cholesky_block (int matrix_size, int block_size, matr A, vect D,
             return ERROR_EPS;
         }
     }
-  if (is_small (A[get_IND (matrix_size - 1, matrix_size - 1, matrix_size)], norm * (10e-9)))
-    return ERROR_EPS;
-
   return 0;
 }
 
@@ -259,16 +253,16 @@ culc_y_not_block (int matrix_size, matr A, vect B, double norm)
 {
   int i, j;
   double sum;
-  if (!norm) return 0;
+  (void) norm;
 
   for (j = 0; j < matrix_size; j++)
     {
       sum = 0;
       for (i = 0; i < j; i++)
         {
-          sum += B [i] * A[get_IND(i, j, matrix_size)];
+          sum += B[i] * A[get_IND(i, j, matrix_size)];
         }
-      B[j] = (B [j] - sum) / A[get_IND(j, j, matrix_size)];
+      B[j] = (B[j] - sum) / A[get_IND(j, j, matrix_size)];
     }
   return 0;
 }
@@ -279,7 +273,7 @@ culc_x_not_block (int matrix_size, matr A, vect D, vect B, double norm)
 {
   int i, j;
   double sum;
-  if (!norm) return 0;
+  (void) norm;
 
   for (i = matrix_size - 1; i >= 0; i--)
     {
@@ -288,7 +282,7 @@ culc_x_not_block (int matrix_size, matr A, vect D, vect B, double norm)
         {
           sum += B[j] * A[get_IND(i, j, matrix_size)];
         }
-      B[i] = D[i] * (B [i] - sum * D[i]) / A[get_IND(i, i, matrix_size)];
+      B[i] = D[i] * (B[i] - sum * D[i]) / A[get_IND(i, i, matrix_size)];
     }
   return 0;
 }

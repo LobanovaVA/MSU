@@ -9,7 +9,7 @@ else
 	echo "-----------------------ALL RESULTS------------------------"
 fi
 	
-dir="../tests"
+dir="../../../../data/small_SLU_tests"
 
 data_s4="\
 a.txt \
@@ -33,11 +33,11 @@ do \
 	if [ $fl -eq 1 ]
 	then
 		error=`echo "${result}" | grep -a 'ERROR'`
-		residual=`echo "${result}" | grep -a 'Residual'`
+		residual=`echo "${result}" | grep -a 'residual'`
 		time=`echo "${result}" | grep -a 'Time'`
 		echo "${error}"
 		echo "${residual}"
-		echo "${time}"
+		#echo "${time}"
 	else
 		echo "${result}"
 	fi
@@ -53,11 +53,11 @@ do \
 	if [ $fl -eq 1 ]
 	then
 		error=`echo "${result}" | grep -a 'ERROR'`
-		residual=`echo "${result}" | grep -a 'Residual'`
+		residual=`echo "${result}" | grep -a 'residual'`
 		time=`echo "${result}" | grep -a 'Time'`
 		echo "${error}"
 		echo "${residual}"
-		echo "${time}"
+		#echo "${time}"
 	else
 		echo "${result}"
 	fi
@@ -81,11 +81,11 @@ do \
 					if [ $fl -eq 1 ]
 					then	
 						error=`echo "${result}" | grep -a 'ERROR'`
-						residual=`echo "${result}" | grep -a 'Residual'`
+						residual=`echo "${result}" | grep -a 'residual'`
 						time=`echo "${result}" | grep -a 'Time'`
 						echo "${error}"
 						echo "${residual}"
-						echo "${time}"
+						#echo "${time}"
 
 					else
 						echo "${result}"
