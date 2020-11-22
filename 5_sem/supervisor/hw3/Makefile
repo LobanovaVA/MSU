@@ -5,7 +5,6 @@ CFLAGS	= $(DEBUG) -W -Wall -Wextra -pedantic -Werror -O3
 LIBS	= -lm
 LDFLAGS = $(DEBUG)
 
-OBJS = process.o integral.o
 HEADERS = all_func.h
 OBJS_1 = func_interpolation.c
 OBJS_2 = func_equations.o f.o
