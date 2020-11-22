@@ -339,6 +339,69 @@ problem_2_5 (double a, double b, double eps, double *x, int mode)
 
 
 
+// Problem 2_6
+int problem_2_6 (int m, double *arr, double a, double b, double eps, double *x, int mode)
+{
+  int it = 0, i, j, it_max = 0;
+  double d, fd, y_max;
+
+  for (i = 0; i < m + 1; i++)
+    {
+      arr[i + m + 1] = a + i * (b - a) / m;
+      arr[i] = f (arr[i + m + 1], mode);
+      arr[i + 2 * m + 2] = arr[i + m + 1];
+
+      if (fabs (arr[i]) < eps)
+        {
+          *x = arr[i + m + 1];
+          return it;
+        }
+    }
+
+  for (it = 1; it < MAX_IT; it++)
+    {
+      for (i = 1; i < m + 1; i++)
+        for (j = m; j >= i; j--)
+          arr[j + 2 * m + 2] = (arr[j - 1 + 2 * m + 2] * arr[j] - arr[j + 2 * m + 2] * arr[j - i])
+              / (arr[j] - arr[j - i]);
+
+      d = arr[3 * m - 2];
+      if (mode == 4 && d < 0)
+        return ERROR_NO_SOLUTION;
+
+      fd = f (d, mode);
+      if (fabs (fd) < eps)
+        break;
+
+      y_max = -1;
+      for (i = 0; i < m + 1; i++)
+        if (fabs (arr[i]) > y_max)
+          {
+            it_max = i;
+            y_max = fabs (arr[i]);
+          }
+
+      if (fabs(fd) > y_max)
+        return ERROR_NO_SOLUTION;
+      else
+        {
+          arr[it_max + m + 1] = d;
+          arr[it_max] = fd;
+          for (j = 0; j < m + 1; j++)
+            arr[j + 2 * m + 2] = arr[j + m + 1];
+        }
+    }
+
+  if (it >= MAX_IT)
+    return ERROR_MAX_ITERATION;
+  else
+    {
+      *x = d;
+      return it;
+    }
+}
+
+
 
 // Problem 2_7
 int problem_2_7 (double x0, double eps, double *x, int mode)

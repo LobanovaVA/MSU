@@ -22,7 +22,7 @@ f (double x, int mode)
         printf ("WARNING: cannot apply f-formula %d for x = %f\n", mode, x);
       break;
     case 5:
-      value = 1 / (x * x + 1);
+      value = 1. / (x * x + 1);
       break;
     default:
       printf ("Unknown parameter %d for f\n", mode);
@@ -57,6 +57,72 @@ d (double x, int mode)
       break;
     default:
       printf ("Unknown parameter %d for d\n", mode);
+    }
+  return value;
+}
+
+
+double
+x (double t, int mode)
+{
+  double value = 0;
+  switch (mode)
+    {
+    case 1:
+      value = t;
+      break;
+    case 2:
+      value = t;
+      break;
+    case 3:
+      value =  t;
+      break;
+    case 4:
+      value =  t;
+      break;
+    case 5:
+      value =  t;
+      break;
+    case 6:
+      value = cos (t);
+      break;
+    default:
+      printf ("Unknown parameter %d for x\n", mode);
+    }
+  return value;
+}
+
+
+
+double
+y (double t, int mode)
+{
+  double value = 0;
+  switch (mode)
+    {
+    case 1:
+      value = t;
+      break;
+    case 2:
+      value = 1 - t * t;
+      break;
+    case 3:
+      value =  t * t * t - 2 * t * t + t;
+      break;
+    case 4:
+      if (!(t < 0))
+        value = sqrt (t) - 3;
+      else
+        printf ("WARNING: cannot apply y-formula %d for x = %f\n", mode, t);
+      break;
+    case 5:
+      value = 1. / (t * t + 1);
+      break;
+    case 6:
+      value = sin (t);
+      break;
+    default:
+      printf ("Unknown parameter %d for y\n", mode);
     }
   return value;
 }
