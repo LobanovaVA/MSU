@@ -57,45 +57,169 @@ problem_2 (double *A, double *X0, double *X, double *B, double t, int m, int n)
 
 
 
-// Problem 3
+
+// for Problem 3, 4, 6
 void
-problem_3 (double *A, double *X0, double *X, double *B, double *R, int m, int n)
+problem_346 (double *A, double *X0, double *X, double *B, double *R, int m, int n,
+            void (*culc_Tk) (double *, double *, int, double *, double *))
 {
   int i, j;
-  double t, tmp, sc_1, sc_2;
+  double t, sc_1, sc_2;
 
   for (i = 0; i < m; i++)
     {
       b_Ax (A, X0, X, B, n); /* -r_k = b - Ax_k -> Х */
       Ax (A, X, R, n);			 /* Ar_k -> R */
 
-
-      sc_1=0; sc_2=0;
-      for (j = 0; j < n; j++) /* <r_k, r_k> и <Ar_k, r_k> */
-        {
-          tmp = X[i];
-          sc_1 += tmp * tmp;
-          sc_2 += R[i] * tmp;
-        }
+      sc_1 = 0;
+      sc_2 = 0;
+      culc_Tk (X, R, n, &sc_1, &sc_2);
 
       if (!(sc_2 < 0 || sc_2 > 0))
         {
-          printf ("\nERROR: Scalar product <Ar_k, r_k> = 0\n");
-          return ;
+          printf ("\nERROR: Scalar product = 0\n");
+          return;
         }
 
       t = sc_1 / sc_2;
 
-//      if (!(t < 0 || t > 0))
-//        {
-//          printf ("t = <r_k, r_k> / <Ar_k, r_k> = 0\n");
-//          return;
-//        }
+      if (!(t < 0 || t > 0))
+        {
+          printf ("\nERROR: Inv scalar product = 0\n");
+          return;
+        }
 
-      for (j = 0; j < n; j++) /* x_k + t [b - Ax_k] -> X0 */
+      for (j = 0; j < n; j++) /* x_k + t_k [b - Ax_k] -> X0 */
         X0[j] += t * X[j];
     }
 
   for (i = 0; i < n; i++)
     X[i] = X0[i];
 }
+
+
+// for Problem 3
+void
+culc_Tk_3 (double *X, double *R, int n, double *ans_1, double *ans_2)
+{
+  int j;
+  double sc_1 = 0, sc_2 = 0, tmp;
+
+  for (j = 0; j < n; j++) /* <Ar_k, r_k> и <Ar_k, Ar_k> */
+    {
+      tmp = X[j];
+      sc_1 += tmp * tmp;
+      sc_2 += R[j] * tmp;
+    }
+
+  *ans_1 = sc_1;
+  *ans_2 = sc_2;
+}
+
+
+// for Problem 4
+void
+culc_Tk_4 (double *X, double *R, int n, double *ans_1, double *ans_2)
+{
+  int j;
+  double sc_1 = 0, sc_2 = 0, tmp;
+
+  for (j = 0; j < n; j++) /* <Ar_k, r_k> и <Ar_k, Ar_k> */
+    {
+      tmp = R[j];
+      sc_1 += X[j] * tmp;
+      sc_2 += tmp * tmp;
+    }
+
+  *ans_1 = sc_1;
+  *ans_2 = sc_2;
+}
+
+
+// for Problem 6
+void
+culc_Tk_6 (double *X, double *R, int n, double *ans_1, double *ans_2)
+{
+  int j;
+  double sc_1 = 0, sc_2 = 0, tmp;
+
+  for (j = 0; j < n; j++) /* <A(D^-1)r_k, r_k> и <A(D^-1)r_k, A(D^-1)r_k> */
+    {
+      tmp = R[j];
+      sc_1 += X[j] * tmp;
+      sc_2 += tmp * tmp;
+    }
+
+  *ans_1 = sc_1;
+  *ans_2 = sc_2;
+}
+
+
+
+
+// for Problem 5
+void
+problem_5 (double *A, double *X0, double *X, double *B, double *R, int m, int n,
+           void (*culc_Tk) (double *, double *, double *, int, double *, double *))
+{
+  int i, j;
+  double t, sc_1, sc_2;
+
+  for (i = 0; i < m; i++)
+    {
+      b_Ax (A, X0, X, B, n); /* -r_k = b - Ax_k -> Х */
+      AD_1x (A, X, R, n);		 /* A(D^-1)r_k -> R */
+
+      sc_1 = 0;
+      sc_2 = 0;
+      culc_Tk (A, X, R, n, &sc_1, &sc_2);
+
+      if (!(sc_2 < 0 || sc_2 > 0))
+        {
+          printf ("\nERROR: Scalar product = 0\n");
+          return;
+        }
+
+      t = sc_1 / sc_2;
+
+      if (!(t < 0 || t > 0))
+        {
+          printf ("\nERROR: Inv scalar product = 0\n");
+          return;
+        }
+
+      for (j = 0; j < n; j++) /* x_k + t_k [b - Ax_k] -> X0 */
+        X0[j] += t * X[j];
+    }
+
+  for (i = 0; i < n; i++)
+    X[i] = X0[i];
+}
+
+
+// for Problem 5
+void
+culc_Tk_5 (double *A, double *X, double *R, int n, double *ans_1, double *ans_2)
+{
+  int j;
+  double sc_1 = 0, sc_2 = 0, tmp;
+  double *pA = A;
+
+  for (j = 0; j < n; j++) /* <(D^-1)r_k, r_k> и <A(D^-1)r_k, (D^-1)r_k> */
+    {
+      if (!(*pA < 0 || *pA > 0))
+        {
+          printf ("\nERROR: A[%d, %d] = 0\n", j, j);
+          return;
+        }
+
+      tmp = X[j];
+      sc_1 += tmp * tmp / *pA;
+      sc_2 += R[j] * tmp / *pA;
+      pA += n + 1;
+    }
+
+  *ans_1 = sc_1;
+  *ans_2 = sc_2;
+}
+

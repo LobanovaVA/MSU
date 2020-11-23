@@ -117,10 +117,12 @@ main (int argc, char *argv[])
 
   /* === solve === */
   time_solve = clock();
-  problem_3 (matrix, vector_X0, vector_X, vector_B, vector_R, m, n);
+  problem_346 (matrix, vector_X0, vector_X, vector_B, vector_R, m, n, &culc_Tk_3);
   time_solve = clock() - time_solve;
 
-  printf ("\n====================\n\n");
+  printf ("\n============================\n\n");
+  printf ("Sum |Ax - b|_i  = %10.3e\n", sum_Ax_b (matrix, vector_X, vector_B, n));
+  printf ("Sum |x - x_mod| = %10.3e\n", sum_x_x0 (vector_X, n));
   printf ("Time:    %f\n", time_solve / CLOCKS_PER_SEC);
   printf("\nVector X_%d:\n", m);
   print_matrix (vector_X, n, 1);

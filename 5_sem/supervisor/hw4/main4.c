@@ -4,24 +4,23 @@ int
 main (int argc, char *argv[])
 {
   const char *filename_A = 0, *filename_X0 = 0;
-  double *matrix, *vector_X, *vector_X0, *vector_B;
-  double t, time_solve;
+  double *matrix, *vector_X, *vector_X0, *vector_B, *vector_R;
+  double time_solve;
   int m, n, ret;
 
 
   /* === get args === */
-  if (! ((argc == 4 || argc == 5 || argc == 6)
+  if (! ((argc == 3 || argc == 4 || argc == 5)
          && sscanf (argv[1], "%d", &m) == 1 && m >= 0
-         && sscanf (argv[2], "%d", &n) == 1 && n > 0
-         && sscanf (argv[3], "%lf", &t) == 1) )
+         && sscanf (argv[2], "%d", &n) == 1 && n > 0) )
     {
-      printf ("ERROR: Usage: %s m n t (a.txt) (x0.txt)\n", argv[0]);
+      printf ("ERROR: Usage: %s m n (a.txt) (x0.txt)\n", argv[0]);
       return ERR_USAGE_ARGC;
     }
-  if (argc >= 5)
-    filename_A = argv[4];
-  if (argc == 6)
-    filename_X0 = argv[5];
+  if (argc >= 4)
+    filename_A = argv[3];
+  if (argc == 5)
+    filename_X0 = argv[4];
 
 
   /* === memory allocation === */
@@ -59,6 +58,17 @@ main (int argc, char *argv[])
       return ERR_ALLOCATE_MEMORY;
     }
 
+  vector_R = (double *) malloc (n * sizeof (double));
+  if (!vector_R)
+    {
+      printf ("ERROR: Can not allocate memory for vector_R\n");
+      free (matrix);
+      free (vector_X);
+      free (vector_X0);
+      free (vector_B);
+      return ERR_ALLOCATE_MEMORY;
+    }
+
 
   /* === initialization === */
   if (filename_A)
@@ -71,6 +81,7 @@ main (int argc, char *argv[])
           free (vector_X);
           free (vector_X0);
           free (vector_B);
+          free (vector_R);
           return ERR_INITIALIZATION;
         }
     }
@@ -87,6 +98,7 @@ main (int argc, char *argv[])
           free (vector_X);
           free (vector_X0);
           free (vector_B);
+          free (vector_R);
           return ERR_INITIALIZATION;
         }
     }
@@ -105,7 +117,7 @@ main (int argc, char *argv[])
 
   /* === solve === */
   time_solve = clock();
-  problem_2 (matrix, vector_X0, vector_X, vector_B, t, m, n);
+  problem_346 (matrix, vector_X0, vector_X, vector_B, vector_R, m, n, &culc_Tk_4);
   time_solve = clock() - time_solve;
 
   printf ("\n============================\n\n");
@@ -119,6 +131,7 @@ main (int argc, char *argv[])
   free (vector_X);
   free (vector_X0);
   free (vector_B);
+  free (vector_R);
   return SUCCESS;
 }
 

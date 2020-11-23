@@ -92,7 +92,7 @@ main (int argc, char *argv[])
   time_solve = clock() - time_solve;
 
   printf ("\n====================\n\n");
-  printf ("Answer: %10.3ee\n", ans);
+  printf ("Answer: %10.3e\n", ans);
   printf ("Time:    %f\n", time_solve / CLOCKS_PER_SEC);
   printf("\nVector X_%d:\n", m);
   print_matrix (vector_X, n, 1);

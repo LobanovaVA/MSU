@@ -35,14 +35,26 @@ void init_vector_X0 (double *vector, int size);
 void init_vector_B (double *vector, double *matrix, int size);
 
 // Matrix operations
+double sum_Ax_b (double *A, double *X, double *B, int size);
+double sum_x_x0 (double *X, int size);
 void Ax (double *A, double *X0, double *X, int size);
 void b_Ax (double *A, double *X0, double *X, double *B, int size);
+void AD_1x (double *A, double *X0, double *X, int size);
 double scalar_product (double *V, double *W, int size);
 
 // Solve
 double problem_1 (double *A, double *X0, double *X, int m, int n);
 void problem_2 (double *A, double *X0, double *X, double *B, double t, int m, int n);
-void problem_3 (double *A, double *X0, double *X, double *B, double *R, int m, int n);
+
+void problem_346 (double *A, double *X0, double *X, double *B, double *R, int m, int n,
+                 void (*culc_Tk) (double *, double *, int, double *, double *));
+void culc_Tk_3 (double *X, double *R, int n, double *ans_1, double *ans_2);
+void culc_Tk_4 (double *X, double *R, int n, double *ans_1, double *ans_2);
+void culc_Tk_6 (double *X, double *R, int n, double *ans_1, double *ans_2);
+
+void problem_5 (double *A, double *X0, double *X, double *B, double *R, int m, int n,
+                 void (*culc_Tk) (double *, double *, double *, int, double *, double *));
+void culc_Tk_5 (double *A, double *X, double *R, int n, double *ans_1, double *ans_2);
 
 #endif
 
