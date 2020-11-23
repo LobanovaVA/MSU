@@ -69,8 +69,8 @@ print_matrix (double *data, int line_size, int column_size)
     {
       for (j = 0; j < column_lim; j++)
         {
-          printf (" %f", data[i * column_size + j]);
-          //printf (" %10.3e", data[i * column_size + j]);
+          //printf (" %f", data[i * column_size + j]);
+          printf (" %10.3e", data[i * column_size + j]);
         }
       printf ("\n");
     }

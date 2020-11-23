@@ -5,22 +5,23 @@ main (int argc, char *argv[])
 {
   const char *filename_A = 0, *filename_X0 = 0;
   double *matrix, *vector_X, *vector_X0, *vector_B, *vector_R;
-  double time_solve;
+  double t, time_solve;
   int m, n, ret;
 
 
   /* === get args === */
-  if (! ((argc == 3 || argc == 4 || argc == 5)
+  if (! ((argc == 4 || argc == 5 || argc == 6)
          && sscanf (argv[1], "%d", &m) == 1 && m >= 0
-         && sscanf (argv[2], "%d", &n) == 1 && n > 0) )
+         && sscanf (argv[2], "%d", &n) == 1 && n > 0
+         && sscanf (argv[3], "%lf", &t) == 1) )
     {
-      printf ("ERROR: Usage: %s m n (a.txt) (x0.txt)\n", argv[0]);
+      printf ("ERROR: Usage: %s m n t (a.txt) (x0.txt)\n", argv[0]);
       return ERR_USAGE_ARGC;
     }
-  if (argc >= 4)
-    filename_A = argv[3];
-  if (argc == 5)
-    filename_X0 = argv[4];
+  if (argc >= 5)
+    filename_A = argv[4];
+  if (argc == 6)
+    filename_X0 = argv[5];
 
 
   /* === memory allocation === */
@@ -117,7 +118,7 @@ main (int argc, char *argv[])
 
   /* === solve === */
   time_solve = clock();
-  problem_5 (matrix, vector_X0, vector_X, vector_B, vector_R, m, n);
+  problem_7 (matrix, vector_X0, vector_X, vector_B, vector_R, t, m, n);
   time_solve = clock() - time_solve;
 
   printf ("\n============================\n\n");
