@@ -61,7 +61,7 @@ Ax (double *A, double *X0, double *X, int size)
 
 // for Problems 2-10
 void
-b_Ax (double *A, double *X0, double *X, double *B, int size)
+Ax_b (double *A, double *X0, double *X, double *B, int size)
 {
   int i, j;
   double sum, *pA = A;
@@ -71,7 +71,7 @@ b_Ax (double *A, double *X0, double *X, double *B, int size)
       for (j = 0; j < size; j++)
         sum += pA[j] * X0[j];
 
-      X[i] = B[i] - sum;
+      X[i] = sum - B[i];
       pA += size;
     }
 }

@@ -117,7 +117,7 @@ main (int argc, char *argv[])
 
   /* === solve === */
   time_solve = clock();
-  problem_346 (matrix, vector_X0, vector_X, vector_B, vector_R, m, n, &culc_Tk_6);
+  problem_6 (matrix, vector_X0, vector_X, vector_B, vector_R, m, n);
   time_solve = clock() - time_solve;
 
   printf ("\n============================\n\n");
