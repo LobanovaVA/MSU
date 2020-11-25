@@ -28,7 +28,7 @@ problem_2_1 (double a, double b, double eps, double *x, int mode)
   for (it = 1; it < MAX_IT; it++)
     {
       c = (a + b) / 2;
-      if (!(a > c || a < c))
+      if (!(a > c || a < c) || !(b > c || b < c))
         break;
 
       fc = f (c, mode);
