@@ -33,7 +33,8 @@ A_minus_RtDR (int size, matr A, matr R1, vect D, matr R2)
 
   for (i = 0; i < size - 2; i += 3)
     {
-      for (j = 0; j < size - 2; j += 3)
+      pA_i_j = &A[i * size];
+      for (j = 0; j < size - 2; j += 3, pA_i_j += 3)
         {
           for (k = 0; k < 9; k++)
             sum[k] = 0;
@@ -68,8 +69,6 @@ A_minus_RtDR (int size, matr A, matr R1, vect D, matr R2)
               pR1_k_i += size;
               pR2_k_j += size;
             }
-
-          pA_i_j = &A[i * size + j];
 
           pA_i_j[0] -= sum[0];
           pA_i_j[1] -= sum[1];
@@ -161,7 +160,7 @@ A_minus_RtDR (int size, matr A, matr R1, vect D, matr R2)
 
 
 void
-DRtA (int size, vect D, matr R, matr A) // R_ii !
+DRtA (int size, vect D, matr R, matr A) // R_ii
 {
   int i, j, k;
   double sum;
@@ -179,6 +178,7 @@ DRtA (int size, vect D, matr R, matr A) // R_ii !
         }
     }
 }
+
 
 
 bool
@@ -212,53 +212,3 @@ reverse_upper_matrix (int size, matr R, matr E, double norm)
   return 0;
 }
 
-
-
-
-/*
-bool
-reverse_upper_matrix (int size, matr R, matr E, double norm)
-{
-
-  int i, j, k;
-  double r_ii, sum1, sum2;
-
-  for (i = size - 1; i >= 0; i--)
-    {
-      r_ii = R[i * size + i];
-      if (is_small (r_ii, EPS * norm))
-        return ERROR_EPS;
-
-      r_ii = 1 / r_ii;
-      E[i * size + i] = r_ii;
-
-      for (j = i + 1; j < size - 1; j += 2)
-        {
-          sum1 = 0;
-          sum2 = 0;
-          for (k = i + 1; k <= j; k++)
-            {
-              sum1 += R[i * size + k] * E[k * size + j];
-              sum2 += R[i * size + k] * E[k * size + j + 1];
-            }
-
-          sum2 += R[i * size + k] * E[k * size + j + 1];
-
-          E[i * size + j] = -sum1 * r_ii;
-          E[i * size + j + 1] = -sum2 * r_ii;
-        }
-      if (j == size - 1)
-        {
-          sum1 = 0;
-          for (int k = i + 1; k <= j; k++)
-            {
-              sum1 += R[i * size + k] * E[k * size + j];
-            }
-          E[i * size + j] = -sum1 * r_ii;
-          j++;
-        }
-    }
-  return 0;
-}
-
-*/

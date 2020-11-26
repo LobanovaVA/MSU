@@ -18,11 +18,11 @@ bool cholesky_block (int matrix_size, int block_size, matr A, vect D,
 
 bool culc_diag_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr Ri,
                         matr A_bl, vect D_bl, double norm, int i, int div, int mod);
-bool culc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr R2, matr Ri,
-                        matr A_bl, vect D_bl, double norm, int i, int s, int div, int mod);
+bool culc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr R2,
+                        matr Ri, matr A_bl, vect D_bl, int i, int s, int div, int mod);
 
-bool culc_y_not_block (int matrix_size, matr A, vect B, double norm);
-bool culc_x_not_block (int matrix_size, matr A, vect D, vect B, double norm);
+void culc_y_not_block (int matrix_size, matr A, vect B);
+void culc_x_not_block (int matrix_size, matr A, vect D, vect B);
 
 #endif
 

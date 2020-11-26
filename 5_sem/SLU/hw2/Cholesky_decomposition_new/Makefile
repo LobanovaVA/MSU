@@ -1,10 +1,10 @@
-CFLASGS = -c -Wall -Wextra -pedantic -Werror -O3 -g
+CFLASGS = -c -Wall -Wextra -pedantic -Werror -O3 -g -pg
 SHELL = /bin/sh
 
 all: a.out
 
 a.out: main.o solve.o in_out.o norm.o matr_operation.o block_action.o
-	g++ -g $^ -o $@
+	g++ -g -pg $^ -o $@
 main.o: main.cpp solve.h
 	g++ $< $(CFLASGS) 
 solve.o: solve.cpp solve.h in_out.h norm.h block_action.h matr_operation.h addition.h

@@ -14,19 +14,10 @@ solve (int matrix_size, int block_size, matr A, vect B, vect D,
   if (ret)
     return ERROR_SINGULAR_MATRIX_R;
 
-  ret = culc_y_not_block (matrix_size, A, B, norm);
-  if (ret)
-    return ERROR_CALC_Y;
-  //printf("\nY\n"); print_matrix (B, matrix_size, 1, matrix_size);
-
-  ret = culc_x_not_block (matrix_size, A, D, B, norm);
-  if (ret)
-    return ERROR_CALC_X;
-  //printf("\nX\n"); print_matrix (B, matrix_size, 1, matrix_size);
+  culc_y_not_block (matrix_size, A, B);
+  culc_x_not_block (matrix_size, A, D, B);
 
   memcpy (X, B, matrix_size * sizeof (double));
-  //printf("\nX\n"); print_matrix (X, matrix_size, 1, matrix_size);
-
   return 0;
 }
 
@@ -93,61 +84,74 @@ cholesky_symm_storage (int size, matr A, vect D, double norm)
   return 0;
 }
 
+
 bool
 cholesky (int size, int shift, matr A, vect D, double norm)
 {
   int i, j, k;
-  double sum, r_ki, r_ii, d_k, inv_d_i_r_ii;
-  double sum1, sum2, sum3, sum4, sum5;
+  double sum[4];
+  double D_k, R_ii, inv_D_i_R_ii, sum_;
+  matr pA_i_i = A, pA_i_j, pA_k_i, pA_k_j;
 
-  for (i = 0; i < size; i++)
+  for (i = 0; i < size; i++, pA_i_i += shift + 1)
     {
-      sum = A[i * shift + i];
-      for (k = 0; k < i; k++)
+      sum_ = pA_i_i[0];
+
+      pA_k_i = &A[i];
+      for (k = 0; k < i; k++, pA_k_i += shift)
         {
-          r_ki = A[k * shift + i];
-          sum -= r_ki * r_ki * D[k];
+          sum_ -= pA_k_i[0] * D[k] * pA_k_i[0];
         }
 
-      if (is_small (sum, EPS * norm))
+      if (is_small (sum_, EPS * norm))
         return ERROR_EPS;
-      D[i] = (sum > 0) ? 1 : -1;
-      r_ii = sqrt (fabs (sum));
 
-      inv_d_i_r_ii = D[i] / r_ii;
-      A[i * shift + i] = r_ii;
+      D[i] = (sum_ > 0) ? 1 : -1;
+      R_ii = sqrt (fabs (sum_));
 
-      for (j = i + 1; j < size - 3; j += 4)
+      inv_D_i_R_ii = D[i] / R_ii;
+      pA_i_i[0] = R_ii;
+
+      pA_i_j = pA_i_i + 1;
+      for (j = i + 1; j < size - 3; j += 4, pA_i_j += 4)
         {
-          sum1 = A[i * shift + j];
-          sum2 = A[i * shift + j + 1];
-          sum3 = A[i * shift + j + 2];
-          sum4 = A[i * shift + j + 3];
+          sum[0] = pA_i_j[0];
+          sum[1] = pA_i_j[1];
+          sum[2] = pA_i_j[2];
+          sum[3] = pA_i_j[3];
+
+          pA_k_i = &A[i];
+          pA_k_j = &A[j];
 
           for (k = 0; k < i; k++)
             {
-              d_k = D[k];
-              sum1 -= A[k * shift + i] * A[k * shift + j] * d_k;
-              sum2 -= A[k * shift + i] * A[k * shift + j + 1] * d_k;
-              sum3 -= A[k * shift + i] * A[k * shift + j + 2] * d_k;
-              sum4 -= A[k * shift + i] * A[k * shift + j + 3] * d_k;
+              D_k = D[k];
+
+              sum[0] -= pA_k_i[0] * D_k * pA_k_j[0];
+              sum[1] -= pA_k_i[0] * D_k * pA_k_j[1];
+              sum[2] -= pA_k_i[0] * D_k * pA_k_j[2];
+              sum[3] -= pA_k_i[0] * D_k * pA_k_j[3];
+
+              pA_k_i += shift;
+              pA_k_j += shift;
             }
 
-          A[i * shift + j] = sum1 * inv_d_i_r_ii;
-          A[i * shift + j + 1] = sum2 * inv_d_i_r_ii;
-          A[i * shift + j + 2] = sum3 * inv_d_i_r_ii;
-          A[i * shift + j + 3] = sum4 * inv_d_i_r_ii;
+          pA_i_j[0] = sum[0] * inv_D_i_R_ii;
+          pA_i_j[1] = sum[1] * inv_D_i_R_ii;
+          pA_i_j[2] = sum[2] * inv_D_i_R_ii;
+          pA_i_j[3] = sum[3] * inv_D_i_R_ii;
         }
 
-      for (; j < size; j += 1)
+      for (; j < size; j++, pA_i_j++)
         {
-          sum5 = A[i * shift + j];
+          sum[0] = pA_i_j[0];
+
           for (k = 0; k < i; k++)
             {
-              sum5 -= A[k * shift + i] * A[k * shift + j] * D[k];
+              sum[0] -= A[k * shift + i] * D[k] * A[k * shift + j];
             }
 
-          A[i * shift + j] = sum5 * inv_d_i_r_ii;
+          pA_i_j[0] = sum[0] * inv_D_i_R_ii;
         }
     }
   return 0;
@@ -175,7 +179,7 @@ cholesky_block (int matrix_size, int block_size, matr A, vect D,
       for (s = i + 1; s < block_lim; s++)
         {
           ret = culc_full_block_R (matrix_size, block_size, A, D, R1, R2, Ri,
-                                   A_bl, D_bl, norm, i, s, num_blocks, mod);
+                                   A_bl, D_bl, i, s, num_blocks, mod);
           if (ret)
             return ERROR_EPS;
         }
@@ -223,12 +227,11 @@ culc_diag_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, mat
   return 0;
 }
 
-bool
-culc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr R2, matr Ri,
-                   matr A_bl, vect D_bl, double norm, int i, int s, int div, int mod)
-{
 
-  (void) norm;
+bool
+culc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr R2,
+                   matr Ri, matr A_bl, vect D_bl, int i, int s, int div, int mod)
+{
   int j;
 
   get_full_block (matrix_size, block_size, A, A_bl, i, s, div, mod);
@@ -241,26 +244,21 @@ culc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, mat
       A_minus_RtDR (block_size, A_bl, R1, D_bl, R2);
     }
 
-  // /* this part moves in culc_diag_block_R */
-  //  get_diag_block (matrix_size, block_size, A, R1, i, div, mod);
-  //  ret = reverse_upper_matrix  (block_size, R1, R2, norm);
-  //  if (ret)
-  //    return ERROR_EPS;
-
   get_vect_block (block_size, D, D_bl, i, div, mod);
   DRtA (block_size, D_bl, Ri, A_bl);
   put_full_block (matrix_size, block_size, A, A_bl, i, s, div, mod);
+
   return 0;
 }
 
 
+
 // ====== culculate solution ======
-bool
-culc_y_not_block (int matrix_size, matr A, vect B, double norm)
+void
+culc_y_not_block (int matrix_size, matr A, vect B)
 {
   int i, j;
   double sum;
-  (void) norm;
 
   for (j = 0; j < matrix_size; j++)
     {
@@ -271,16 +269,14 @@ culc_y_not_block (int matrix_size, matr A, vect B, double norm)
         }
       B[j] = (B[j] - sum) / A[get_IND(j, j, matrix_size)];
     }
-  return 0;
 }
 
 
-bool
-culc_x_not_block (int matrix_size, matr A, vect D, vect B, double norm)
+void
+culc_x_not_block (int matrix_size, matr A, vect D, vect B)
 {
   int i, j;
   double sum;
-  (void) norm;
 
   for (i = matrix_size - 1; i >= 0; i--)
     {
@@ -291,5 +287,5 @@ culc_x_not_block (int matrix_size, matr A, vect D, vect B, double norm)
         }
       B[i] = D[i] * (B[i] - sum * D[i]) / A[get_IND(i, i, matrix_size)];
     }
-  return 0;
 }
+
