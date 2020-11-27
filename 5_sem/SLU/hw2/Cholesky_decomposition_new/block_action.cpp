@@ -1,6 +1,6 @@
 #include "block_action.h"
 
-// ====== get block ======
+/* ========== get block ========== */
 void
 get_full_block (int matrix_size, int block_size, const matr A, matr A_bl, int i_bl, int j_bl, int div, int mod)
 {
@@ -61,7 +61,7 @@ get_vect_block (int block_size, const vect D, vect D_bl, int i_bl, int div, int 
 
 
 
-// ====== put block ======
+/* ========== put block ========== */
 void
 put_full_block (int matrix_size, int block_size, matr A, const matr A_bl, int i_bl, int j_bl, int div, int mod)
 {

@@ -1,5 +1,6 @@
 #include "in_out.h"
 
+/* ========== initialization ========== */
 double
 f (int s, int n, int i, int j)
 {
@@ -87,6 +88,9 @@ init_vector_B (int matrix_size, matr matrix, vect vector_B)
     }
 }
 
+
+
+/* ========== print ========== */
 void
 print_matrix (double *data, int line_size, int column_size, int print_size)
 {

@@ -177,44 +177,13 @@ main (int argc, char *argv[])
                vector_X, block_R1, block_R2, block_Ri, block_A, block_vector_D);
   time_solve = (clock () - time_solve) / CLOCKS_PER_SEC;
 
-  /*
-  for (int l = 0; l < matrix_size; l++)
-    {
-      for (int h = 0; h < l; h++) printf (" %10.3e", 0.0);
-      for (int h = l; h < matrix_size; h++)
-        {
-          double sumRDR = 0;
-          for (int k = 0; k <= l; k++)
-            sumRDR += matrix[get_IND (k, l, matrix_size)] * vector_D[k] * matrix[get_IND (k, h, matrix_size)] ;
-          //matrix[get_IND (l, h, matrix_size)] = sumRDR;
-          printf (" %10.3e", sumRDR);
-        }
-      printf ("\n");
-    }
-  */
 
-  //printf ("\nA_ans\n"); print_symmetric_matrix(matrix, matrix_size, matrix_size);
-  //cholesky_symm_storage(matrix_size, matrix, vector_D, 1);
-
-
-  //  printf ("\nD_ans\n"); print_matrix(vector_D, matrix_size, 1, matrix_size);
-  //  printf ("\nR_ans\n"); print_upper_matrix(matrix, matrix_size, matrix_size);
-
-  if (ret < SUCCESS)
+  if (ret != SUCCESS)
     {
       switch (ret)
         {
-        case ERROR_SINGULAR_MATRIX_A:
-          printf ("\nERROR: Singular matrix A\n");
-          break;
         case ERROR_SINGULAR_MATRIX_R:
           printf ("\nERROR: Singular matrix R in Cholesky decomposition\n");
-          break;
-        case ERROR_CALC_Y:
-          printf ("\nERROR: Degenerate element in cuclulate vector Y\n");
-          break;
-        case ERROR_CALC_X:
-          printf ("\nERROR: Degenerate element in cuclulate vector X\n");
           break;
         default:
           printf ("\nERROR: Unknown error = %d in solve\n", ret);
@@ -268,6 +237,6 @@ main (int argc, char *argv[])
   delete[] block_Ri;
   delete[] block_A;
   delete[] block_vector_D;
-  return 0;
+  return SUCCESS;
 }
 

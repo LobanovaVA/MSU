@@ -9,11 +9,7 @@
 #define ERROR_NOT_ENOUGH_MEMMORY -21
 
 #define ERROR_EPS 1
-#define ERROR_EPS1 1234567
-#define ERROR_SINGULAR_MATRIX_A -71
 #define ERROR_SINGULAR_MATRIX_R -72
-#define ERROR_CALC_Y -73
-#define ERROR_CALC_X -74
 
 #include <stdio.h>
 #include <stdlib.h>

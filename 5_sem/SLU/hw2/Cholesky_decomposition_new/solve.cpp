@@ -18,11 +18,12 @@ solve (int matrix_size, int block_size, matr A, vect B, vect D,
   culc_x_not_block (matrix_size, A, D, B);
 
   memcpy (X, B, matrix_size * sizeof (double));
-  return 0;
+  return SUCCESS;
 }
 
 
-// ====== cholesky ======
+
+/* ============ cholesky ============ */
 bool
 cholesky_symm_storage (int size, matr A, vect D, double norm)
 {
@@ -81,7 +82,7 @@ cholesky_symm_storage (int size, matr A, vect D, double norm)
           A[get_IND (i, j, size)] = sum5 * inv_d_i_r_ii;
         }
     }
-  return 0;
+  return SUCCESS;
 }
 
 
@@ -154,7 +155,7 @@ cholesky (int size, int shift, matr A, vect D, double norm)
           pA_i_j[0] = sum[0] * inv_D_i_R_ii;
         }
     }
-  return 0;
+  return SUCCESS;
 }
 
 
@@ -185,11 +186,11 @@ cholesky_block (int matrix_size, int block_size, matr A, vect D,
         }
     }
 
-  return 0;
+  return SUCCESS;
 }
 
 
-// ====== culculate block R ======
+/* ============ culculate block R ============ */
 bool
 culc_diag_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr Ri,
                    matr A_bl, vect D_bl, double norm, int i, int div, int mod)
@@ -224,7 +225,7 @@ culc_diag_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, mat
         return ERROR_EPS;
     }
 
-  return 0;
+  return SUCCESS;
 }
 
 
@@ -248,12 +249,12 @@ culc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, mat
   DRtA (block_size, D_bl, Ri, A_bl);
   put_full_block (matrix_size, block_size, A, A_bl, i, s, div, mod);
 
-  return 0;
+  return SUCCESS;
 }
 
 
 
-// ====== culculate solution ======
+/* ============ culculate solution ============ */
 void
 culc_y_not_block (int matrix_size, matr A, vect B)
 {
