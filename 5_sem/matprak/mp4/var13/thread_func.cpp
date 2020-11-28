@@ -47,21 +47,20 @@ thread_func (void *data)
   /* === gluing together of decreasing sections === */
   if (border[k])
     {
-
       sum = b_sum[k];
       count = b_num[k];
 
       if (k != 0)
-          gluing_previous (arr, p, k, size, e_sum, e_num,
-                           border, sum, count);
+        gluing_previous (arr, p, k, size, e_sum, e_num,
+                         border, sum, count);
 
       if (k != p - 1)
-          gluing_following (arr, p, k, size, b_sum, b_num,
-                            border, sum, count);
+        gluing_following (arr, p, k, size, b_sum, b_num,
+                          border, sum, count);
 
       pthread_barrier_wait (barrier);
 
-      if (count)
+      if (count && count != 1)
         {
           result[k] += r - l;
           new_value = sum / count;
@@ -76,19 +75,18 @@ thread_func (void *data)
 
       if (k != 0)
         gluing_previous (arr, p, k, size, e_sum, e_num,
-                         border, sum_prev, count_prev);
+                           border, sum_prev, count_prev);
 
       sum_next = e_sum[k];
       count_next = e_num[k];
 
       if (k != p - 1)
         gluing_following (arr, p, k, size, b_sum, b_num,
-                          border, sum_next, count_next);
+                            border, sum_next, count_next);
 
       pthread_barrier_wait (barrier);
 
-
-      if (count_prev)
+      if (count_prev && count_prev != 1)
         {
           result[k] += b_num[k];
           new_value = sum_prev / count_prev;
@@ -96,7 +94,7 @@ thread_func (void *data)
             arr[l + i] = new_value;
         }
 
-      if (count_next)
+      if (count_next && count_next != 1)
         {
           result[k] += e_num[k];
           new_value = sum_next / count_next;

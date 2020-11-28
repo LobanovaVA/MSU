@@ -204,14 +204,13 @@ main (int argc, const char *argv[])
     }
 
   printf ("\nAnswer: %d\n", total_res);
-  printf ("\nWall clock time: %6.2f\n", full_time);
-  printf ("\nSum CPU time: %6.2f\n", sum_time);
+  printf ("\nWall clock time: %.2f\n", full_time);
+  printf ("\nSum CPU time: %.2f\n", sum_time);
 
-  printf ("CPU time:\n");
+  printf ("\n|CPU| time |\n------------\n");
   for (i = 0; i < p; i++)
-    {
-      printf ("#%3d %6.2f\n", i, time[i]);
-    }
+      printf ("|%3d| %5.2f|\n", i, time[i]);
+
 
   pthread_barrier_destroy (&barrier);
   delete [] array;

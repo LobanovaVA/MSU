@@ -1,59 +1,26 @@
-# LIBS  = -lm -pthread -lpthread
-# DEBUG = -g 
+LIBS  = -lm -pthread -lpthread
+DEBUG = -g 
 
-# CC = g++ -c
-# LD = g++
+CC = g++ -c
+LD = g++
 
-# CFLAGS	= $(DEBUG) -W -Wall -Wextra -pedantic -Werror -O3
-# LDFLAGS = $(DEBUG)
-
-
-# all: a.out clean_obj
-
-# a.out: $(patsubst %.cpp,%.o,$(wildcard *.cpp))
-# 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@ 
-
-# %.o: %.cpp
-# 	$(CC) $(CFLAGS) -MD $<
-
-# include $(wildcard *.d)
-
-
-# clean_obj:
-# 	rm -f *.o *.d
-	
-# clean: clean_obj
-# 	rm -f *.out 
-
-
-DEBUG	= -g
-CC	= g++ -c
-LD	= g++
-CFLAGS	= $(DEBUG) -W -Wall -Wextra -pedantic -Werror #-O3
-LIBS	= -pthread -lpthread
+CFLAGS	= $(DEBUG) -W -Wall -Wextra -pedantic -Werror -O3
 LDFLAGS = $(DEBUG)
 
-OBJS = main.o thread_func.o task.o time.o array.o
 
-all : a.out 
+all: a.out clean_obj
 
-a.out : $(OBJS)
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+a.out: $(patsubst %.cpp,%.o,$(wildcard *.cpp))
+	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@ 
 
-main.o : main.cpp addition.h
-	$(CC) $(CFLAGS) $< -o $@
+%.o: %.cpp
+	$(CC) $(CFLAGS) -MD $<
 
-array.o : array.cpp addition.h
-	$(CC) $(CFLAGS) $< -o $@	
+include $(wildcard *.d)
 
-thread_func.o : thread_func.cpp addition.h
-	$(CC) $(CFLAGS) $< -o $@
 
-task.o : task.cpp addition.h
-	$(CC) $(CFLAGS) $< -o $@
-
-time.o : time.cpp addition.h
-	$(CC) $(CFLAGS) $< -o $@
-
-clean:
-	rm -f $(OBJS) *.out 
+clean_obj:
+	rm -f *.o *.d
+	
+clean: clean_obj
+	rm -f *.out 
