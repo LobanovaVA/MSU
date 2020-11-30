@@ -14,8 +14,8 @@ solve (int matrix_size, int block_size, matr A, vect B, vect D,
   if (ret)
     return ERROR_SINGULAR_MATRIX_R;
 
-  culc_y_not_block (matrix_size, A, B);
-  culc_x_not_block (matrix_size, A, D, B);
+  calc_y_not_block (matrix_size, A, B);
+  calc_x_not_block (matrix_size, A, D, B);
 
   memcpy (X, B, matrix_size * sizeof (double));
   return SUCCESS;
@@ -172,14 +172,14 @@ cholesky_block (int matrix_size, int block_size, matr A, vect D,
 
   for (i = 0; i < block_lim; i++)
     {
-      ret = culc_diag_block_R (matrix_size, block_size, A, D, R1, Ri,
+      ret = calc_diag_block_R (matrix_size, block_size, A, D, R1, Ri,
                                A_bl, D_bl, norm, i, num_blocks, mod);
       if (ret)
         return ERROR_EPS;
 
       for (s = i + 1; s < block_lim; s++)
         {
-          ret = culc_full_block_R (matrix_size, block_size, A, D, R1, R2, Ri,
+          ret = calc_full_block_R (matrix_size, block_size, A, D, R1, R2, Ri,
                                    A_bl, D_bl, i, s, num_blocks, mod);
           if (ret)
             return ERROR_EPS;
@@ -190,9 +190,9 @@ cholesky_block (int matrix_size, int block_size, matr A, vect D,
 }
 
 
-/* ============ culculate block R ============ */
+/* ============ calculate block R ============ */
 bool
-culc_diag_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr Ri,
+calc_diag_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr Ri,
                    matr A_bl, vect D_bl, double norm, int i, int div, int mod)
 {
   int j;
@@ -220,7 +220,7 @@ culc_diag_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, mat
   /* inverse R_ii */
   if (i != div)
     {
-      ret = reverse_upper_matrix (block_size, A_bl, Ri, norm);
+      ret = inverse_upper_matrix (block_size, A_bl, Ri, norm);
       if (ret)
         return ERROR_EPS;
     }
@@ -230,7 +230,7 @@ culc_diag_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, mat
 
 
 bool
-culc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr R2,
+calc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr R2,
                    matr Ri, matr A_bl, vect D_bl, int i, int s, int div, int mod)
 {
   int j;
@@ -254,9 +254,9 @@ culc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, mat
 
 
 
-/* ============ culculate solution ============ */
+/* ============ calculate solution ============ */
 void
-culc_y_not_block (int matrix_size, matr A, vect B)
+calc_y_not_block (int matrix_size, matr A, vect B)
 {
   int i, j;
   double sum;
@@ -274,7 +274,7 @@ culc_y_not_block (int matrix_size, matr A, vect B)
 
 
 void
-culc_x_not_block (int matrix_size, matr A, vect D, vect B)
+calc_x_not_block (int matrix_size, matr A, vect D, vect B)
 {
   int i, j;
   double sum;

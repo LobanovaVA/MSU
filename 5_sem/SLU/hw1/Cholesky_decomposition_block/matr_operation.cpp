@@ -182,7 +182,7 @@ DRtA (int size, vect D, matr R, matr A) // R_ii
 
 
 bool
-reverse_upper_matrix (int size, matr R, matr E, double norm)
+inverse_upper_matrix (int size, matr R, matr E, double norm)
 {
 
   int i, j, k;
