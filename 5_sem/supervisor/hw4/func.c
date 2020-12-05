@@ -190,10 +190,12 @@ problem_5 (double *A, double *X0, double *X, double *B, double *R, int m, int n)
           return;
         }
 
+      pA = A;
       for (j = 0; j < n; j++) /* x_k - t_k [b - Ax_k] -> X0 */
         {
-          X0[j] -= t * R[j]; /* x_k+1 = x_k - t_k [r_k] -> X0 */
+          X0[j] -= t * R[j] / *pA; /* x_k+1 = x_k - t_k(D^-1)[r_k] -> X0 */
           R[j] -= t * X[j];  /* r_k+1 = r_k - t_k [Ar_k] -> R */
+          pA += n + 1;
         }
     }
 
@@ -209,7 +211,7 @@ void
 problem_6 (double *A, double *X0, double *X, double *B, double *R, int m, int n)
 {
   int i, j;
-  double t, sc_1, sc_2;
+  double t, sc_1, sc_2, *pA;
 
   Ax_b (A, X0, R, B, n); /* r_0 = Ax_0 - b -> R */
 
@@ -237,10 +239,12 @@ problem_6 (double *A, double *X0, double *X, double *B, double *R, int m, int n)
           return;
         }
 
+      pA = A;
       for (j = 0; j < n; j++) /* x_k - t_k [b - Ax_k] -> X0 */
         {
-          X0[j] -= t * R[j]; /* x_k+1 = x_k - t_k [r_k] -> X0 */
+          X0[j] -= t * R[j]/ *pA;; /* x_k+1 = x_k - t_k(D^-1)[r_k] -> X0 */
           R[j] -= t * X[j];  /* r_k+1 = r_k - t_k [Ar_k] -> R */
+          pA += n + 1;
         }
     }
 
