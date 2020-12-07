@@ -91,35 +91,37 @@ init_vector_B (int matrix_size, matr matrix, vect vector_B)
 
 /* ========== thread initialization ========== */
 void
-init_thread (int matrix_size, const int mode, char *filename,
+init_thread (int matrix_size, int block_size, const int mode, char *filename,
              matr A, vect B, vect X, vect D, int th_p, int th_i,
              pthread_barrier_t *barrier, int *status)
 {
-  init_zero_thread (matrix_size, A, B, X, D, th_p, th_i, barrier, status);
+  init_zero_thread (matrix_size, block_size, A, B, X, D, th_p, th_i, barrier, status);
 
   if (mode)
-    init_matrix_thread (mode, matrix_size, A, th_p, th_i, barrier);
+    init_matrix_thread (mode, matrix_size, block_size, A, th_p, th_i, barrier);
   else
     read_matrix_thread (filename, matrix_size, A, th_i, barrier, status);
 
   init_vector_B_thread (matrix_size, A, B, th_i, barrier);
-
 }
 
 void
-init_zero_thread (int matrix_size, matr A, vect B, vect X, vect D,
+init_zero_thread (int matrix_size, int block_size, matr A, vect B, vect X, vect D,
                   int th_p, int th_i, pthread_barrier_t *barrier, int *status)
 {
-  int i, j;
+  int i, j, k;
 
-  for (i = th_i; i < matrix_size; i += th_p)
+  for (k = th_i * block_size; k < matrix_size; k += th_p * block_size)
     {
-      B[i] = 0;
-      X[i] = 0;
-      D[i] = 0;
+      for (j = k; j < matrix_size && j < k + block_size; j++)
+        {
+          for (i = 0; i <= j; i++)
+            A[get_IND (i, j, matrix_size)] = 0;
 
-      for (j = i; j < matrix_size; j++)
-        A[get_IND (i, j, matrix_size)] = 0;
+          B[j] = 0;
+          X[j] = 0;
+          D[j] = 0;
+        }
     }
 
   status[th_i] = SUCCESS;
@@ -128,14 +130,19 @@ init_zero_thread (int matrix_size, matr A, vect B, vect X, vect D,
 
 
 void
-init_matrix_thread (const int mode, int matrix_size, matr matrix,
+init_matrix_thread (const int mode, int matrix_size, int block_size, matr matrix,
                     int th_p, int th_i, pthread_barrier_t *barrier)
 {
-  int i, j;
+  int i, j, k;
 
-  for (i = th_i; i < matrix_size; i += th_p)
-    for (j = i; j < matrix_size; j++)
-      matrix[get_IND (i, j, matrix_size)] = f (mode, matrix_size, i, j);
+  for (k = th_i * block_size; k < matrix_size; k += th_p * block_size)
+    {
+      for (j = k; j < matrix_size && j < k + block_size; j++)
+        {
+          for (i = 0; i <= j; i++)
+            matrix[get_IND (i, j, matrix_size)] = f (mode, matrix_size, i, j);
+        }
+    }
 
   pthread_barrier_wait (barrier);
 }
@@ -144,7 +151,7 @@ void
 read_matrix_thread (const char *filename, int matrix_size, matr matrix,
                     int th_i, pthread_barrier_t *barrier, int *status)
 {
-  if (th_i == 0)
+  if (th_i == MAIN_THREAD)
     status[th_i] = read_matrix (filename, matrix_size, matrix);
 
   pthread_barrier_wait (barrier);
@@ -154,7 +161,7 @@ void
 init_vector_B_thread (int matrix_size, matr matrix, vect vector_B,
                       int th_i, pthread_barrier_t *barrier)
 {
-  if (th_i == 0)
+  if (th_i == MAIN_THREAD)
     init_vector_B (matrix_size, matrix, vector_B);
 
   pthread_barrier_wait (barrier);
@@ -225,7 +232,7 @@ void
 print_after_init_thread (matr matrix, vect vector_B, int matrix_size, int print_size,
                          int th_i, pthread_barrier_t *barrier)
 {
-  if (th_i == 0)
+  if (th_i == MAIN_THREAD)
     {
       printf ("\nMatrix:\n");
       print_symmetric_matrix (matrix, matrix_size, print_size);
@@ -234,5 +241,4 @@ print_after_init_thread (matr matrix, vect vector_B, int matrix_size, int print_
     }
 
   pthread_barrier_wait (barrier);
-
 }

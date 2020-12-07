@@ -203,7 +203,6 @@ main (int argc, char *argv[])
     }
 
 
-
   printf ("\nVector ans:\n");
   print_matrix (vector_X, matrix_size, 1, print_size);
 

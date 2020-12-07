@@ -7,11 +7,12 @@
 #include "block_action.h"
 #include "matr_operation.h"
 
-int solve (int matrix_size, int block_size, matr A, vect B, vect D,
-           vect X, matr R1, matr R2, matr Ri, matr A_bl, vect D_bl);
-
 bool cholesky_symm_storage (int size, matr A, vect D, double norm);
 bool cholesky (int size, int shift, matr A, vect D, double norm);
+
+/* ========== block solve ========== */
+int solve (int matrix_size, int block_size, matr A, vect B, vect D,
+           vect X, matr R1, matr R2, matr Ri, matr A_bl, vect D_bl);
 
 bool cholesky_block (int matrix_size, int block_size, matr A, vect D,
                      matr R1, matr R2, matr Ri, matr A_bl, vect D_bl, double norm);
@@ -24,5 +25,17 @@ bool calc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1
 void calc_y_not_block (int matrix_size, matr A, vect B);
 void calc_x_not_block (int matrix_size, matr A, vect D, vect B);
 
+/* ========== thread solve ========== */
+void solve_thread (int matrix_size, int block_size, matr A, vect B, vect D, vect X,
+                   int th_p, int th_i, pthread_barrier_t *barrier, int *status);
+
+void cholesky_thread (int matrix_size, int block_size, matr A, vect D, double norm,
+                      int th_p, int th_i, pthread_barrier_t *barrier, int *status);
+
+bool calc_diag_block_R2 (int matrix_size, int block_size, matr A, vect D, matr R1,
+                         matr A_bl, vect D_bl, double norm, int i, int div, int mod);
+
+bool calc_full_block_R2 (int matrix_size, int block_size, matr A, vect D, matr Ri_inv, vect D_i,
+                         matr R_is, matr R1, matr R2, vect D_bl, int i, int s, int div, int mod);
 #endif
 

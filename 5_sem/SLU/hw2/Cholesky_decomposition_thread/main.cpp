@@ -6,13 +6,13 @@ main (int argc, char *argv[])
 {
   feenableexcept (FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW);
 
-//  cpu_set_t cpu;
-//  CPU_ZERO (&cpu);
-//  CPU_SET (get_nprocs() - 1, &cpu);
+  //  cpu_set_t cpu;
+  //  CPU_ZERO (&cpu);
+  //  CPU_SET (get_nprocs() - 1, &cpu);
 
-//  sched_setaffinity (getpid(), sizeof (cpu), &cpu);
+  //  sched_setaffinity (getpid(), sizeof (cpu), &cpu);
 
-//  double full_time, time_solve, time_residue, residue, diff_ans;
+  //  double full_time, time_solve, time_residue, residue, diff_ans;
 
   char *filename = 0;
   int matrix_size, block_size, print_size, mode, ret;
@@ -181,7 +181,6 @@ main (int argc, char *argv[])
 
   full_time = get_full_time () - full_time;
 
-
   /* === check errors === */
   for (th_i = 0; th_i < thread_num; th_i++)
     {
@@ -190,15 +189,22 @@ main (int argc, char *argv[])
           switch (status[th_i])
             {
             case ERROR_CANNOT_OPEN_INPUT_FILE:
-              fprintf (stderr, "ERROR: Cannot open input file %s\n", filename);
+              printf ("%s : ERROR: Cannot open input file %s", argv[0], filename);
               break;
             case ERROR_CANNOT_READ_INPUT_FILE:
-              fprintf (stderr, "ERROR: Cannot read input file %s\n", filename);
+              printf ("%s : ERROR: Cannot read input file %s", argv[0], filename);
+              break;
+            case ERROR_INCORRECT_MATRIX_TYPE:
+              printf ("%s : ERROR: Incorrect matrix type in %s", argv[0], filename);
+              break;
+            case ERROR_EPS:
+              printf ("%s : ERROR: Singular matrix R in Cholesky decomposition", argv[0]);
               break;
             default:
-              fprintf (stderr, "ERROR: Unknown error %d in %s\n", ret, filename);
+              printf ("%s : ERROR: Unknown error %d", argv[0], status[th_i]);
             }
 
+          printf (" for s = %d n = %d m = %d p = %d\n", mode, matrix_size, block_size, thread_num);
           delete [] args;
           delete [] matrix_A;
           delete [] vector_B;
@@ -207,12 +213,26 @@ main (int argc, char *argv[])
           delete [] status;
           delete [] tids;
           pthread_barrier_destroy (&barrier);
-          return ERR_DATA_INIT;
+          return -1;
         }
     }
 
   /* === solve === */
-/*
+
+  printf ("\n   Reinit matrix...\n\n");
+  if (argc == 7)
+    {
+      read_matrix (filename, matrix_size, matrix_A);
+    }
+  else
+    init_matrix (mode, matrix_size, matrix_A);
+  init_vector_B (matrix_size, matrix_A, vector_B);
+
+  double residue = norm_Ax_b (matrix_size, matrix_A, vector_B, vector_X);
+  printf ("%s : residual = %e for s = %d n = %d m = %d p = %d\n",
+          argv[0], residue, mode, matrix_size, block_size, thread_num);
+
+  /*
   time_solve = clock ();
   ret = solve (matrix_size,block_size, matrix, vector_B, vector_D,
                vector_X, block_R1, block_R2, block_Ri, block_A, block_vector_D);

@@ -12,15 +12,19 @@ void init_matrix (const int mode, int matrix_size, matr matrix);
 void init_vector_B (int matrix_size, matr matrix, vect vector_B);
 
 /* ========== thread initialization ========== */
-void init_thread (int matrix_size, const int mode, char *filename,
+void init_thread (int matrix_size, int block_size, const int mode, char *filename,
                   matr A, vect B, vect X, vect D, int th_p, int th_i,
                   pthread_barrier_t *barrier, int * status);
-void init_zero_thread (int matrix_size, matr A, vect B, vect X, vect D,
+
+void init_zero_thread (int matrix_size, int block_size, matr A, vect B, vect X, vect D,
                        int th_p, int th_i, pthread_barrier_t *barrier, int *status);
-void init_matrix_thread (const int mode, int matrix_size, matr matrix,
+
+void init_matrix_thread (const int mode, int matrix_size, int block_size, matr matrix,
                          int th_p, int th_i, pthread_barrier_t *barrier);
+
 void read_matrix_thread (const char *filename, int matrix_size, matr matrix,
-                         int th_i, pthread_barrier_t *barrier, int * status);
+                         int th_i, pthread_barrier_t *barrier, int *status);
+
 void init_vector_B_thread (int matrix_size, matr matrix, vect vector_B,
                            int th_i, pthread_barrier_t *barrier);
 

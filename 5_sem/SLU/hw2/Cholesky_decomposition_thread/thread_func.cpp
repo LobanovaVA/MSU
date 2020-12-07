@@ -42,24 +42,30 @@ thread_func (void *data)
   pthread_barrier_wait (barrier);
 
   /* === initialization === */
-  init_thread (matrix_size, mode, filename, A, B, X, D,
-               th_p, th_i, barrier, status);
+  init_thread (matrix_size, block_size, mode, filename,
+               A, B, X, D, th_p, th_i, barrier, status);
 
-  for (i = 0; i < th_p; i++)
-    {
-      if (status[i] != SUCCESS)
-          return nullptr;
-    }
+  if (status[MAIN_THREAD] != SUCCESS)
+    return nullptr;
 
   print_after_init_thread (A, B, matrix_size, print_size, th_i, barrier);
-
 
   args -> time_thread = get_cpu_time ();
   args -> time_total = get_full_time ();
 
   /* === solve === */
-  (void) block_size;
+  solve_thread (matrix_size, block_size, A, B, D, X, th_p, th_i, barrier, status);
 
+  for (i = 0; i < th_p; i++)
+    {
+      if (status[i] != SUCCESS)
+        {
+          pthread_barrier_wait (barrier);
+          return nullptr;
+        }
+    }
+
+  print_after_init_thread (A, X, matrix_size, print_size, th_i, barrier);
 
   args -> time_thread = get_cpu_time () - args -> time_thread;
   args -> time_total = get_full_time () - args -> time_total;
@@ -68,5 +74,4 @@ thread_func (void *data)
 
   pthread_barrier_wait (barrier);
   return nullptr;
-
 }
