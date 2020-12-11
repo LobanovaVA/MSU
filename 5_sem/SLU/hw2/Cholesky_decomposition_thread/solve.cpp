@@ -301,15 +301,11 @@ solve_thread (int matrix_size, int block_size, matr A, vect B, vect D, vect X,
   int i;
   double norm = 0;
 
+  norm = norm_A (matrix_size, A);
   if (th_i == MAIN_THREAD)
-    {
-      norm = norm_A (matrix_size, A);
-      printf("\nMatrix norm = %lf\n", norm);
-    }
-  pthread_barrier_wait (barrier);
+      printf("\nMatrix norm = %f\n", norm);
 
   cholesky_thread (matrix_size, block_size, A, D, norm, th_p, th_i, barrier, status);
-  pthread_barrier_wait (barrier);
 
   for (i = 0; i < th_p; i++)
     {
@@ -372,6 +368,7 @@ cholesky_thread (int matrix_size, int block_size, matr A, vect D, double norm,
 
       /* === calculate diag block R_{ii} -> Ri_tmp, D_i === */
       get_full_block (matrix_size, block_size, A, Ri_tmp, i, i, num_blocks, mod);
+      pthread_barrier_wait (barrier);
       ret = calc_diag_block_R2 (matrix_size, block_size, A, D, R1,
                                 Ri_tmp, D_i, norm, i, num_blocks, mod);
 
@@ -435,13 +432,13 @@ cholesky_thread (int matrix_size, int block_size, matr A, vect D, double norm,
         }
 
       /* === put diag block R_{ii} === */
-      pthread_barrier_wait (barrier);
+      //pthread_barrier_wait (barrier);
       if (i % th_p == th_i)
         {
           put_diag_block (matrix_size, block_size, A, Ri_tmp, i, num_blocks, mod);
           put_vect_block (block_size, D, D_i, i, num_blocks, mod);
         }
-      pthread_barrier_wait (barrier);
+      //pthread_barrier_wait (barrier);
     }
 
   delete [] R1;
@@ -451,6 +448,7 @@ cholesky_thread (int matrix_size, int block_size, matr A, vect D, double norm,
   delete [] Ri_inv;
   delete [] D_bl;
   delete [] D_i;
+  pthread_barrier_wait (barrier);
 }
 
 

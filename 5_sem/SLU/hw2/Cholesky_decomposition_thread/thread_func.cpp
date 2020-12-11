@@ -60,7 +60,7 @@ thread_func (void *data)
     {
       if (status[i] != SUCCESS)
         {
-          pthread_barrier_wait (barrier);
+          //pthread_barrier_wait (barrier);
           return nullptr;
         }
     }

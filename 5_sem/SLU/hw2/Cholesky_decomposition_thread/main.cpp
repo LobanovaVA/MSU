@@ -6,14 +6,6 @@ main (int argc, char *argv[])
 {
   feenableexcept (FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW);
 
-  //  cpu_set_t cpu;
-  //  CPU_ZERO (&cpu);
-  //  CPU_SET (get_nprocs() - 1, &cpu);
-
-  //  sched_setaffinity (getpid(), sizeof (cpu), &cpu);
-
-  //  double full_time, time_solve, time_residue, residue, diff_ans;
-
   char *filename = 0;
   int matrix_size, block_size, print_size, mode, ret;
   double full_time;
