@@ -111,7 +111,7 @@
 % Глава2
 \newpage
 \section{Блочный метод Холецкого}
-\subsection{Описание блочного метода Холецкого}
+\subsection{Описание блочного разложения Холецкого}
     Разобьем матрицу $A$ на блоки $(A_{ij})$ размера $m \times m$, где $m < n$ и 
     в случае когда $m \nmid n \Rightarrow n = m*k + l, l \neq 0$, 
     крайние блоки могут иметь размеры $m \times l$, $l \times m$, $l \times l$. 
@@ -288,104 +288,142 @@ for (i = n - 1; i >= 0; i--)
 % Глава3
 \newpage
 \section{Параллельный блочный метод Холецкого}
-\subsection{Описание параллельного блочного метода Холецкого}
+\subsection{Описание параллельного блочного разложения Холецкого}
     Из формул~\eqref{block_i} и~\eqref{block_is} видно, что после вычисления диагольного 
     блока и его обращения все блоки вне диагонали можно искать в любом порядке в 
-    контексте текущей строки, при чём для вычисления блока $R_{is}$ требуются блоки 
-    из столбцов $i$ и $s$, находящиеся строго в предыдущих строках. \\
+    контексте текущей строки. \\
     
-    Пусть $p$ --- количество потоков и потоки никак не мешают друг другу. 
-    Принадлежность столбца потоку определяется так:
-    $t$-ый поток обрабатывает столбцы с номерами $t + zp$, где $z \in \mathbb{Z}$. \\
+    Пусть $p$ --- количество потоков. Принадлежность столбца потоку определяется так:
+    $s$-ый поток обрабатывает столбцы с номерами $s + zp$, где $z \in \mathbb{Z}$. \\
     
-    Таким образом, предлагается 
-    \hypertarget{paral_alg}{ледующий параллельный алгоритм}, 
-    в котором каждый поток считает блоки только из своего столбца. 
+    Для вычислени $R_{is}$ ребуются блоки из столбцов $i$ и $s$, находящиеся строго в предыдущих строках. При чем $s$-ый столбец считается «своим», а $i$-ый принадлежит 
+    другому потоку, поэтому предалагается каждому потоку иметь копию столбца $i$. \\
+    
+    Барьеры используются для корректного копирования данных из общей памяти (матрицы $A$),
+    соотвественно до и после этой операции. \\
+    
+    Таким образом, имеем 
+    \hypertarget{paral_alg}{следующий параллельный алгоритм}: 
 
 \begin{verbatim}
 for (i = 0; i < block_lim; i++)
   {
-    R_ii_tmp = A_{ii};
-    calculate_diag_block R_{ii};
-    inverse_upper_matrix R_{ii};
+    Barrier
+    get diag block R_{ii} and i-th column
+    Barrier
     
-    if (i % p < t_id)
-        j = i - (i % p) + t_id;
+    calculate diag block R_{ii}
+    inverse diag block R_{ii}
+    
+    if (i % th_p == th_i)
+        put diag block R_{ii} and block D_{i}
+        
+    if (i % th_p < th_i)
+        j = i - (i % p) + th_i;
     else
-        j = i - (i % p) + p + t_id;
+        j = i - (i % p) + p + th_i;
         
-    for (; j < block_lim; j += p)
+    for (; j < block_lim; j += th_p)
       {
-        R_ij_tmp = A_{ij};
-        calculate_block R_{ij};
-        A_{ij} = R_ij_tmp;
+        get block R_{ij}
+        calculate block R_{ij}
+        put block R_{ij}
       }
-    
-    Barrier ();
-    
-    if (i % p == t_id)
-        A_{ii} = R_ii_temp;
   }
 \end{verbatim}
 
-\newpage
+
 \subsection{Описание параллельного решения систем $R^T y = b$ и $DRx = y$}
-    Сделаем параллельным описанный выше 
-    \hyperlink{calc_y}{линейный алгоритм решения системы $R^T y = b$}.   
+
+    Описанный выше 
+    \hyperlink{calc_y}{линейный алгоритм решения системы $R^T y = b$} 
+    имеет особенность - для вычисления $y[i]$ 
+    \hypertarget{reason}{требуются готовые значения всех предыдущих компонент}, 
+    то есть $y[j],\, j = 0 \dots i-1$, что для паралельной реализации недопустимо. \\
     
-    Каждый поток подсчитывает свой $y[i]$ по следующему правилу:\\
-    если $i = t \pmod{p}$, то поток с номером $t$ вычисляет $y[i]$.
-
+    По аналогии с параллельным блочным разложением определим принадлежность данных потоку.
+    Пусть $p$ --- количество потоков, $i$-ый блок вектора $b$ принадлежит потоку 
+    с номером $i\,\%\, p$. \\
+    
+    Заметим, что в СЛУ матрица $R$ транспонироана, поэтому при умножении на блоки $R$ всегда подразумевается операция с транспонированным блоком. К тому же, обратный ход Гаусса выполняется с вычитанием не строк, а столбцов. \\
+    
+    Получается следующий параллельный алгоритм: 
+    
 \begin{verbatim}
-for (j = 0 + t_id; j < n; j += p)
+for (i = 0; i < block_lim; i++)
   {
-    sum = 0;
-    for (i = 0; i <= j - p; i++)
-      sum += Y[i] * R_{ki};
-        
-    pthread_mutex_lock (mut);
-    while (*elems_done < i)
-      pthread_cond_wait (cond, mut);
-    pthread_mutex_unlock (mut);
-      
-    for (; i < j; i++)
-      sum += Y[i] * R_{ij};
+    Barrier
+    get diag block R_{ii} and block B_{i}
+    Barrier
+    
+    inverse diag block R_{ii}
+    calculate inv_R_{ii}^T * B_{i} -> B_diff
 
-    Y[j] = (B[j] - sum) / R_{jj};
-      
-    pthread_mutex_lock (mut);
-    (*elems_done)++;
-    pthread_cond_broadcast (cond);
-    pthread_mutex_unlock (mut);
-  }
+    if (i % th_p < th_i)
+      s = i - (i % th_p) + th_i;
+    else
+      s = i - (i % th_p) + th_p + th_i;
+
+    for (; s < block_lim; s += th_p)
+      {
+        get block R_{is} 
+        get block B_{s}
+        calculate B_{s} - R_{is}^T * (B_diff)
+        put block B_{s}
+      }
+
+    if (i % th_p == th_i)
+      put changed block B_{i}
+    }
 \end{verbatim}
 
-    Аналогично получается параллельный алгоритм 
-    \hyperlink{calc_x}{для решения системы $DRx = y$}.
-    Каждый поток подсчитывает свой $x[i]$ по следующему правилу:
-    если $i = t \pmod{p}$, то поток с номером $t$ вычисляет $y[n - 1 - i]$.
+    Описанный выше 
+    \hyperlink{calc_x}{линейный алгоритм решения системы $DRx = y$} 
+    по той же \hyperlink{reason}{причине} не можем использовать. \\
+    
+    Перед началом решения паралельно умножит вектор $y$ на $D^{-1} = D$.
+    На $i$-ой итерации обратного хода потоки будут вычислять изменение текущего блока $Y[i]$ 
+    (за счет условного вычитания строк) и складывать результат в разделяемый буферный блочный вектор $S$. После поток с номером $i\,\%\, p$ соберет эти изменения и применит к блоку $Y[i]$. \\
+    
+    Таким образом, получаем следующий параллельный алгоритм: 
 
 \begin{verbatim}
-for (i = n - 1 - t_id; i >= 0; i -= p)
+for (i = 0; i < block_lim; i++)
   {
-    sum = 0;
-    for (j = n - 1; j >= i + p; j--)
-      sum += X[j] * R_{ij};
-        
-    pthread_mutex_lock (mut);
-    while (*elems_done < n - 1 - i)
-      pthread_cond_wait (cond, mut);
-    pthread_mutex_unlock (mut);
-      
-    for (; j > i; j--)
-      sum += X[j] * R_{ij};
+    if (i % th_p < th_i)
+      s = i + (i % th_p) - th_i;
+    else
+      s = i + (i % th_p) - th_p - th_i;
 
-    X[i] = D[i] * (B[i] - sum * D[i]) / R_{ii};
+    bzero B_diff
+    for (; s >= 0; s -= th_p)
+      {
+        get block R_{is}
+        get block B_{s}
+        calculate - R_{is} * B_{s} -> B_diff
+      }
+    put_block B_diff -> S
+    Barrier
       
-    pthread_mutex_lock (mut);
-    (*elems_done)++;
-    pthread_cond_broadcast (cond);
-    pthread_mutex_unlock (mut);
+    if (i % th_p == th_i)
+      {
+        get diag block R_{ii}
+        get block B_{i} -> B_diff
+        inverse diag block R_{ii}
+
+        /* get total B_diff */
+        for (j = 0; j < block_size; j ++)
+          {
+            sum = 0;
+            for (s = 0; s < th_p; s++)
+              sum += S[j + s * block_size];
+            B_diff[j] += sum;
+          }
+
+        calculate  inv_R_{ii} * B_{i}
+        put changed block B_{i}
+      }
+    Barrier
   }
 \end{verbatim}
 
@@ -393,13 +431,11 @@ for (i = n - 1 - t_id; i >= 0; i -= p)
 \subsection{Оценка числа точек синхронизаций}
     Считаем, что $n = mk + l,\; l = 0$.\\
     
-    Разложение матрицы методом Холецкого требует $k$ барьеров.
-    При решении систем $R^T y = b$ и $DRx = y$ используется по $n$ точек синхронизации.
-    Причем каждый поток использует только свою память, а синхронизация осуществляется 
-    за счет условной переменной, где условие - это количество уже вычисленных элементов.\\
+    Разложение матрицы методом Холецкого требует $2k$ барьеров.
+    При решении систем $R^T y = b$ и $DRx = y$ используется по $2k$ точек синхронизации.
+    Причем каждый поток использует только свою память.\\
     
-    Таким образом весь алгоритм требует 
-    $\boxed {\frac{n}{m} + 2n}$ точек синхронизаций.
+    Таким образом, в параллельном алгоритме $3k$ точек синхронизаций.
     
 
 \newpage
