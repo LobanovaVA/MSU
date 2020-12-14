@@ -31,14 +31,25 @@
 #include <sys/sysinfo.h>
 #include <pthread.h>
 
+#include <iostream>
+#include <string.h>
+#include <memory>
+
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 
 constexpr double EPS = 1.e-15;
+
 using matr = double *;
 using vect = double *;
+using matr_bl = double *;
+using vect_bl = double *;
+using column = double *;
 
+using ptr_matr = std::unique_ptr <double []>;
+using ptr_vect = std::unique_ptr <double []>;
 
 class argument
 {
@@ -56,9 +67,11 @@ public:
   vect B = nullptr;
   vect X = nullptr;
   vect D = nullptr;
+  vect S = nullptr;
 
   double time_thread = 0;
   double time_total = 0;
+  double residual = -1;
 
   pthread_barrier_t *barrier = nullptr;
   int *status = nullptr;
@@ -91,3 +104,6 @@ is_small (double value, double eps)
 #define CMP(a,b) (!((a) > (b) || (a) < (b)))
 
 #endif
+
+
+

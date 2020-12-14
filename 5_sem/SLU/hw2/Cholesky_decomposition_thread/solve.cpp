@@ -1,29 +1,5 @@
 #include "solve.h"
 
-/* ========== block solve ========== */
-int
-solve (int matrix_size, int block_size, matr A, vect B, vect D,
-       vect X, matr R1, matr R2, matr Ri, matr A_bl, vect D_bl)
-{
-  bool ret;
-  double norm;
-
-  norm = norm_A (matrix_size, A);
-  printf("\nMatrix norm = %lf\n", norm);
-
-  ret = cholesky_block (matrix_size, block_size, A, D, R1, R2, Ri, A_bl, D_bl, norm);
-  if (ret)
-    return ERROR_SINGULAR_MATRIX_R;
-
-  calc_y_not_block (matrix_size, A, B);
-  calc_x_not_block (matrix_size, A, D, B);
-
-  memcpy (X, B, matrix_size * sizeof (double));
-  return SUCCESS;
-}
-
-
-
 /* ============ cholesky ============ */
 bool
 cholesky_symm_storage (int size, matr A, vect D, double norm)
@@ -160,117 +136,426 @@ cholesky (int size, int shift, matr A, vect D, double norm)
 }
 
 
-bool
-cholesky_block (int matrix_size, int block_size, matr A, vect D,
-                matr R1, matr R2, matr Ri, matr A_bl, vect D_bl, double norm)
+/* ========== thread solve ========== */
+void
+solve_thread (int matrix_size, int block_size, matr A, vect B, vect X, vect D, vect S,
+              int th_p, int th_i, pthread_barrier_t *barrier, int *status)
 {
-  int num_blocks, mod, block_lim, i, s;
+  double norm = 0;
+
+  norm = norm_A (matrix_size, A);
+  if (th_i == MAIN_THREAD)
+    printf("\nMatrix norm = %f\n", norm);
+
+  cholesky_thread (matrix_size, block_size, A, D, norm,
+                   th_p, th_i, barrier, status);
+
+  /* no barrier used because all threads get ERROR_EPS */
+  if (status[th_i] != SUCCESS)
+    return;
+
+  calc_y_thread (matrix_size, block_size, A, B, th_p, th_i, barrier);
+  DB (matrix_size, block_size, D, B, th_p, th_i, barrier);
+  calc_x_thread (matrix_size, block_size, A, B, S, th_p, th_i, barrier);
+
+  if (th_i == MAIN_THREAD)
+      memcpy (X, B, matrix_size * sizeof (double));
+
+  pthread_barrier_wait (barrier);
+}
+
+
+
+void
+cholesky_thread (int matrix_size, int block_size, matr A, vect D, double norm,
+                 int th_p, int th_i, pthread_barrier_t *barrier, int *status)
+{
+  int squared_block_size = block_size * block_size;
+  int num_blocks, mod, block_lim;
+  int i, s;
   bool ret;
+
+  std::unique_ptr <double []> ptr_R_bl, ptr_R_is,
+      ptr_Ri_tmp, ptr_Ri_inv, ptr_D_bl, ptr_D_i, ptr_R_col;
+
+  matr_bl R_bl, R_is, Ri_tmp, Ri_inv;
+  vect_bl D_bl, D_i;
+  column R_col;
 
   num_blocks = matrix_size / block_size;
   mod = matrix_size % block_size;
   block_lim = (mod) ? num_blocks + 1 : num_blocks;
 
+
+  /* === memory allocation === */
+  ptr_R_bl = std::make_unique <double []> (squared_block_size);
+  ptr_R_is = std::make_unique <double []> (squared_block_size);
+  ptr_Ri_tmp = std::make_unique <double []> (squared_block_size);
+  ptr_Ri_inv = std::make_unique <double []> (squared_block_size);
+  ptr_D_bl = std::make_unique <double []> (block_size);
+  ptr_D_i = std::make_unique <double []> (block_size);
+  ptr_R_col = std::make_unique <double []> (matrix_size * block_size);
+
+  R_bl = ptr_R_bl.get ();
+  R_is = ptr_R_is.get ();
+  Ri_tmp = ptr_Ri_tmp.get ();
+  Ri_inv = ptr_Ri_inv.get ();
+  D_bl = ptr_D_bl.get ();
+  D_i = ptr_D_i.get ();
+  R_col = ptr_R_col.get ();
+
+
+  /* === cholesky decoposition === */
   for (i = 0; i < block_lim; i++)
     {
-      ret = calc_diag_block_R (matrix_size, block_size, A, D, R1, Ri,
-                               A_bl, D_bl, norm, i, num_blocks, mod);
-      if (ret)
-        return ERROR_EPS;
+      /* === get diag block R_{ii} and i-th column -> Ri_tmp, R_col === */
+      pthread_barrier_wait (barrier);
+      get_full_block (matrix_size, block_size, A, Ri_tmp, i, i, num_blocks, mod);
+      get_column (matrix_size, block_size, A, R_col, i, num_blocks, mod);
+      pthread_barrier_wait (barrier);
 
-      for (s = i + 1; s < block_lim; s++)
+      /* === calculate diag block R_{ii} -> Ri_tmp, D_i === */
+      ret = calc_diag_block_R (block_size, D, R_col, Ri_tmp, D_i,
+                               norm, i, num_blocks, mod);
+      if (ret)
         {
-          ret = calc_full_block_R (matrix_size, block_size, A, D, R1, R2, Ri,
-                                   A_bl, D_bl, i, s, num_blocks, mod);
+          /* no barrier used because all threads calculate R_{ii} and all get ERROR_EPS */
+          status[th_i] = ERROR_EPS;
+          return;
+        }
+
+      /* === inverse diag block R_{ii} -> Ri_inv === */
+      if (i != num_blocks)
+        {
+          ret = inverse_upper_matrix (block_size, block_size, Ri_tmp, Ri_inv, norm);
           if (ret)
-            return ERROR_EPS;
+            {
+              /* no barrier used because all threads inverse R_{ii} and all get ERROR_EPS */
+              status[th_i] = ERROR_EPS;
+              return;
+            }
+        }
+
+      /* === put diag block R_{ii} and block D_{i} === */
+      if (i % th_p == th_i)
+        {
+          put_diag_block (matrix_size, block_size, A, Ri_tmp, i, num_blocks, mod);
+          put_vect_block (block_size, D, D_i, i, num_blocks, mod);
+        }
+
+      /* ===  not diag block R_{is} -> R_is === */
+      if (i % th_p < th_i)
+        s = i - (i % th_p) + th_i;
+      else
+        s = i - (i % th_p) + th_p + th_i;
+
+      for (; s < block_lim; s += th_p)
+        {
+
+          get_full_block (matrix_size, block_size, A, R_is, i, s, num_blocks, mod);
+          calc_full_block_R (matrix_size, block_size, A, D, Ri_inv, D_i,
+                             R_is, R_col, R_bl, D_bl, i, s, num_blocks, mod);
+          put_full_block (matrix_size, block_size, A, R_is, i, s, num_blocks, mod);
         }
     }
 
-  return SUCCESS;
+  pthread_barrier_wait (barrier);
 }
 
 
 /* ============ calculate block R ============ */
 bool
-calc_diag_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr Ri,
-                   matr A_bl, vect D_bl, double norm, int i, int div, int mod)
+calc_diag_block_R (int block_size, vect D, column R_col, matr_bl Ri, vect_bl D_bl,
+                   double norm, int i, int div, int mod)
 {
-  int j;
+  int j, shift = block_size * block_size;
   bool ret;
-  get_full_block (matrix_size, block_size, A, A_bl, i, i, div, mod);
+  matr_bl R_ji = R_col;
 
-  for (j = 0 ; j < i; j++)
+  for (j = 0 ; j < i; j++, R_ji += shift)
     {
-      get_full_block (matrix_size, block_size, A, R1, j, i, div, mod);
       get_vect_block (block_size, D, D_bl, j, div, mod);
-      A_minus_RtDR (block_size, A_bl, R1, D_bl, R1);
+      A_minus_RtDR (block_size, Ri, R_ji, D_bl, R_ji);
     }
 
   if (i != div)
-    ret = cholesky (block_size, block_size, A_bl, D_bl, norm);
+    ret = cholesky (block_size, block_size, Ri, D_bl, norm);
   else
-    ret = cholesky (mod, block_size, A_bl, D_bl, norm);
+    ret = cholesky (mod, block_size, Ri, D_bl, norm);
 
   if (ret)
     return ERROR_EPS;
 
-  put_diag_block (matrix_size, block_size, A, A_bl, i, div, mod);
-  put_vect_block (block_size, D, D_bl, i, div, mod);
-
-  /* inverse R_ii */
-  if (i != div)
-    {
-      ret = inverse_upper_matrix (block_size, A_bl, Ri, norm);
-      if (ret)
-        return ERROR_EPS;
-    }
-
   return SUCCESS;
 }
 
 
-bool
-calc_full_block_R (int matrix_size, int block_size, matr A, vect D, matr R1, matr R2,
-                   matr Ri, matr A_bl, vect D_bl, int i, int s, int div, int mod)
-{
-  int j;
-
-  get_full_block (matrix_size, block_size, A, A_bl, i, s, div, mod);
-
-  for (j = 0 ; j < i; j++)
-    {
-      get_full_block (matrix_size, block_size, A, R1, j, i, div, mod);
-      get_full_block (matrix_size, block_size, A, R2, j, s, div, mod);
-      get_vect_block (block_size, D, D_bl, j, div, mod);
-      A_minus_RtDR (block_size, A_bl, R1, D_bl, R2);
-    }
-
-  get_vect_block (block_size, D, D_bl, i, div, mod);
-  DRtA (block_size, D_bl, Ri, A_bl);
-  put_full_block (matrix_size, block_size, A, A_bl, i, s, div, mod);
-
-  return SUCCESS;
-}
-
-
-
-/* ============ calculate solution ============ */
 void
-calc_y_not_block (int matrix_size, matr A, vect B)
+calc_full_block_R (int matrix_size, int block_size, matr A, vect D,
+                   matr_bl Ri_inv, vect_bl D_i, matr_bl R_is, column R_col,
+                   matr_bl R_bl, vect_bl D_bl, int i, int s, int div, int mod)
+{
+  int j, shift = block_size * block_size;
+  matr_bl R_ji = R_col;
+
+  for (j = 0 ; j < i; j++, R_ji += shift)
+    {
+      get_full_block (matrix_size, block_size, A, R_bl, j, s, div, mod);
+      get_vect_block (block_size, D, D_bl, j, div, mod);
+      A_minus_RtDR (block_size, R_is, R_ji, D_bl, R_bl);
+    }
+
+  DRtA (block_size, D_i, Ri_inv, R_is);
+}
+
+
+
+/* ============ thread calculate solution ============ */
+void
+calc_y_thread (int matrix_size, int block_size, matr A, vect B,
+               int th_p, int th_i, pthread_barrier_t *barrier)
+{
+  int squared_block_size = block_size * block_size;
+  int num_blocks, mod, block_lim, column_lim = block_size;
+  int i, s;
+
+  std::unique_ptr <double []> ptr_R_bl, ptr_Ri_inv, ptr_B_i, ptr_B_s, ptr_B_diff;
+
+  matr_bl R_bl, Ri_inv;
+  vect_bl B_i, B_s, B_diff;
+
+  num_blocks = matrix_size / block_size;
+  mod = matrix_size % block_size;
+  block_lim = (mod) ? num_blocks + 1 : num_blocks;
+
+
+  /* === memory allocation === */
+  ptr_R_bl = std::make_unique <double []> (squared_block_size);
+  ptr_Ri_inv = std::make_unique <double []> (squared_block_size);
+  ptr_B_i = std::make_unique <double []> (block_size);
+  ptr_B_s = std::make_unique <double []> (block_size);
+  ptr_B_diff = std::make_unique <double []> (block_size);
+
+  R_bl = ptr_R_bl.get ();
+  Ri_inv = ptr_Ri_inv.get ();
+  B_i = ptr_B_i.get ();
+  B_s = ptr_B_s.get ();
+  B_diff = ptr_B_diff.get ();
+
+
+  /* === calculate solution -> B === */
+  for (i = 0; i < block_lim; i++)
+    {
+      if (i == num_blocks)
+        column_lim = mod;
+
+      /* === get diag block R_{ii} and block B_{i} -> Ri_bl, B_i=== */
+      get_full_block (matrix_size, block_size, A, R_bl, i, i, num_blocks, mod);
+      pthread_barrier_wait (barrier);
+      get_vect_block (block_size, B, B_i, i, num_blocks, mod);
+      pthread_barrier_wait (barrier);
+
+      /* === inverse diag block R_{ii} -> Ri_inv === */
+      if (i != num_blocks)
+        inverse_upper_matrix (block_size, block_size, R_bl, Ri_inv, -1);
+      else
+        inverse_upper_matrix (column_lim, block_size, R_bl, Ri_inv, -1);
+
+      /* === calculate inv_R_{ii}^T * B_{i} -> B_diff === */
+      RtB (block_size, Ri_inv, B_i, B_diff);
+
+      /* === change B_{s} -> B_s -> B === */
+      if (i % th_p < th_i)
+        s = i - (i % th_p) + th_i;
+      else
+        s = i - (i % th_p) + th_p + th_i;
+
+      for (; s < block_lim; s += th_p)
+        {
+          get_full_block (matrix_size, block_size, A, R_bl, i, s, num_blocks, mod);
+          get_vect_block (block_size, B, B_s, s, num_blocks, mod);
+
+          /* === calculate B_{s} - R_{is}^T * (inv_R_{ii}^T * B_{i}) -> B_s === */
+          Bs_MtB (block_size, B_s, R_bl, B_diff);
+
+          put_vect_block (block_size, B, B_s, s, num_blocks, mod);
+        }
+
+      /* === put changed B_{i} -> B === */
+      if (i % th_p == th_i)
+        put_vect_block (block_size, B, B_diff, i, num_blocks, mod);
+    }
+
+  pthread_barrier_wait (barrier);
+}
+
+
+
+void
+calc_x_thread2 (int matrix_size, int block_size, matr A, vect B, vect S,
+                int th_p, int th_i, pthread_barrier_t *barrier)
+{
+
+  int squared_block_size = block_size * block_size;
+  int num_blocks, mod, block_lim, column_lim = block_size;
+  int i, j, s;
+  double sum;
+
+  std::unique_ptr <double []> ptr_R_bl, ptr_Ri_inv, ptr_D_bl, ptr_B_bl, ptr_B_diff;
+
+  matr_bl R_bl, Ri_inv;
+  vect_bl D_bl, B_bl, B_diff;
+  (void) D_bl;
+
+  num_blocks = matrix_size / block_size;
+  mod = matrix_size % block_size;
+  block_lim = (mod) ? num_blocks + 1 : num_blocks;
+
+
+  /* === memory allocation === */
+  ptr_R_bl = std::make_unique <double []> (squared_block_size);
+  //ptr_R_si = std::make_unique <double []> (squared_block_size);
+  ptr_Ri_inv = std::make_unique <double []> (squared_block_size);
+  ptr_D_bl = std::make_unique <double []> (block_size);
+  ptr_B_bl = std::make_unique <double []> (block_size);
+  ptr_B_diff = std::make_unique <double []> (block_size);
+
+  R_bl = ptr_R_bl.get ();
+  //R_si = ptr_R_si.get ();
+  Ri_inv = ptr_Ri_inv.get ();
+  D_bl = ptr_D_bl.get ();
+  B_bl = ptr_B_bl.get ();
+  B_diff = ptr_B_diff.get ();
+
+  for (i = 0; i < block_lim; i++)
+    {
+      if (th_i == MAIN_THREAD) printf ("\n =========== i = %d \n", i);
+      if (i == num_blocks)
+        column_lim = mod;
+
+      if (i % th_p < th_i)
+        s = i + (i % th_p) - th_i;
+      else
+        s = i + (i % th_p) - th_p - th_i;
+
+      bzero (B_diff, block_size * sizeof (double));
+      for (; s >= 0; s -= th_p)
+        {
+          printf ("\n th_i = %d s =%d \n", th_i, s);
+          get_full_block (matrix_size, block_size, A, R_bl, s, i, num_blocks, mod);
+          //          printf ("\nR s = %d i = %d\n", s, i);
+          //          print_matrix(R_bl, block_size, block_size, matrix_size);
+
+          get_vect_block (block_size, B, B_bl, s, num_blocks, mod);
+          //          printf ("\nB s = %d\n", s);
+          //          print_matrix(B_bl, block_size, 1, matrix_size);
+
+          //diff_MtB (block_size, B_diff, R_bl, B_bl);
+        }
+      put_vect_block (block_size, S, B_diff, th_i, num_blocks, mod);
+
+      if (th_i == MAIN_THREAD) {
+          printf ("\nB_diff ALLL\n");
+          print_matrix(S, 9, 1, 9);}
+
+      pthread_barrier_wait (barrier);
+      if (i % th_p == th_i)
+        {
+
+          get_full_block (matrix_size, block_size, A, R_bl, i, i, num_blocks, mod);
+
+          //          printf ("\n R i = %d\n", i);
+          //          print_matrix(R_bl, block_size, block_size, matrix_size);
+
+
+          if (i != num_blocks)
+            inverse_upper_matrix (block_size, block_size, R_bl, Ri_inv, -1);
+          else
+            inverse_upper_matrix (column_lim, block_size, R_bl, Ri_inv, -1);
+
+          //          printf ("\nB RHS i = %d\n", i);
+          //          print_matrix(B, matrix_size, 1, matrix_size);
+
+          get_vect_block (block_size, B, B_diff, i, num_blocks, mod);
+
+          //          printf ("\n до вычитания B i = %d\n", i);
+          //          print_matrix(B_diff, block_size, 1, matrix_size);
+
+          for (j = 0; j < block_size; j ++)
+            {
+              sum = 0;
+              for (s = 0; s < th_p; s++)
+                sum += S[j + s * block_size];
+              B_diff[j] += sum;
+            }
+
+          //          printf ("\n до умнржения B i = %d\n", i);
+          //          print_matrix(B_diff, block_size, 1, matrix_size);
+
+          //          printf ("\n R inv = %d\n", i);
+          //          print_matrix(Ri_inv, block_size, block_size, matrix_size);
+
+          RtB (block_size, Ri_inv, B_diff, B_bl);
+          put_vect_block (block_size, B, B_bl, i, num_blocks, mod);
+
+          //          printf ("\n после  умнржения B i = %d\n", i);
+          //          print_matrix(B_bl, block_size, 1, matrix_size);
+
+
+          //          printf ("\nAns i = %d\n", i);
+          //          print_matrix(B, matrix_size, 1, matrix_size);
+
+        }
+      pthread_barrier_wait (barrier);
+    }
+
+  pthread_barrier_wait (barrier);
+
+}
+
+
+void
+calc_x_thread (int matrix_size, int block_size, matr A, vect B, vect S,
+               int th_p, int th_i, pthread_barrier_t *barrier)
 {
   int i, j;
   double sum;
 
-  for (j = 0; j < matrix_size; j++)
+  (void) block_size;
+  (void) th_p;
+  (void) S;
+
+  if (th_i == MAIN_THREAD)
     {
-      sum = 0;
-      for (i = 0; i < j; i++)
+      for (i = matrix_size - 1; i >= 0; i--)
         {
-          sum += B[i] * A[get_IND(i, j, matrix_size)];
+          sum = 0;
+          for (j = matrix_size - 1; j > i; j--)
+            {
+              sum += B[j] * A[get_IND(i, j, matrix_size)];
+            }
+          B[i] = (B[i] - sum) / A[get_IND(i, i, matrix_size)];
         }
-      B[j] = (B[j] - sum) / A[get_IND(j, j, matrix_size)];
     }
+
+  pthread_barrier_wait (barrier);
+}
+
+
+
+void
+DB (int matrix_size, int block_size, vect D, vect B,
+    int th_p, int th_i, pthread_barrier_t *barrier)
+{
+  int j, k;
+
+  for (k = th_i * block_size; k < matrix_size; k += th_p * block_size)
+    {
+      for (j = k; j < matrix_size && j < k + block_size; j++)
+        B[j] *= D[j];
+    }
+
+  pthread_barrier_wait (barrier);
 }
 
 
@@ -289,222 +574,4 @@ calc_x_not_block (int matrix_size, matr A, vect D, vect B)
         }
       B[i] = D[i] * (B[i] - sum * D[i]) / A[get_IND(i, i, matrix_size)];
     }
-}
-
-
-
-/* ========== thread solve ========== */
-void
-solve_thread (int matrix_size, int block_size, matr A, vect B, vect D, vect X,
-              int th_p, int th_i, pthread_barrier_t *barrier, int *status)
-{
-  int i;
-  double norm = 0;
-
-  norm = norm_A (matrix_size, A);
-  if (th_i == MAIN_THREAD)
-      printf("\nMatrix norm = %f\n", norm);
-
-  cholesky_thread (matrix_size, block_size, A, D, norm, th_p, th_i, barrier, status);
-
-  for (i = 0; i < th_p; i++)
-    {
-      if (status[i] != SUCCESS)
-        return;
-    }
-
-  pthread_barrier_wait (barrier);
-
-  if (th_i == MAIN_THREAD)
-    {
-      calc_y_not_block (matrix_size, A, B);
-      calc_x_not_block (matrix_size, A, D, B);
-      memcpy (X, B, matrix_size * sizeof (double));
-    }
-
-  pthread_barrier_wait (barrier);
-}
-
-
-void
-cholesky_thread (int matrix_size, int block_size, matr A, vect D, double norm,
-                 int th_p, int th_i, pthread_barrier_t *barrier, int *status)
-{
-  int num_blocks, mod, block_lim;
-  int i, s;
-  bool ret;
-
-  matr R1, R2, R_is, Ri_tmp, Ri_inv;
-  vect D_bl, D_i;
-
-  R1 = new double [block_size * block_size];
-  R2 = new double [block_size * block_size];
-  R_is = new double [block_size * block_size];
-  Ri_tmp = new double [block_size * block_size];
-  Ri_inv = new double [block_size * block_size];
-  D_bl = new double [block_size];
-  D_i = new double [block_size];
-
-  if (! (R1 && R2 && R_is && Ri_tmp && Ri_inv && D_bl && D_i))
-    {
-      delete [] R1;
-      delete [] R2;
-      delete [] R_is;
-      delete [] Ri_tmp;
-      delete [] Ri_inv;
-      delete [] D_bl;
-      delete [] D_i;
-      printf ("ERROR: Not enough memory for blocks in %d thread\n", th_i);
-      status[th_i] = ERR_ALLOCATE_MEMORY;
-      return;
-    }
-
-  num_blocks = matrix_size / block_size;
-  mod = matrix_size % block_size;
-  block_lim = (mod) ? num_blocks + 1 : num_blocks;
-
-  for (i = 0; i < block_lim; i++)
-    {
-
-      /* === calculate diag block R_{ii} -> Ri_tmp, D_i === */
-      get_full_block (matrix_size, block_size, A, Ri_tmp, i, i, num_blocks, mod);
-      pthread_barrier_wait (barrier);
-      ret = calc_diag_block_R2 (matrix_size, block_size, A, D, R1,
-                                Ri_tmp, D_i, norm, i, num_blocks, mod);
-
-      if (ret)
-        {
-          delete [] R1;
-          delete [] R2;
-          delete [] R_is;
-          delete [] Ri_tmp;
-          delete [] Ri_inv;
-          delete [] D_bl;
-          delete [] D_i;
-          status[th_i] = ERROR_EPS;
-          return;
-        }
-
-      /* === inverse diag block R_{ii} -> Ri_inv === */
-      if (i != num_blocks)
-        {
-          ret = inverse_upper_matrix (block_size, Ri_tmp, Ri_inv, norm);
-          if (ret)
-            {
-              delete [] R1;
-              delete [] R2;
-              delete [] R_is;
-              delete [] Ri_tmp;
-              delete [] Ri_inv;
-              delete [] D_bl;
-              delete [] D_i;
-              status[th_i] = ERROR_EPS;
-              return;
-            }
-        }
-
-      /* === calculate not diag block R_{ij} -> Ri_tmp === */
-      if (i % th_p < th_i)
-        s = i - (i % th_p) + th_i;
-      else
-        s = i - (i % th_p) + th_p + th_i;
-
-      for (; s < block_lim; s += th_p)
-        {
-          get_full_block (matrix_size, block_size, A, R_is, i, s, num_blocks, mod);
-
-          ret = calc_full_block_R2 (matrix_size, block_size, A, D, Ri_inv, D_i,
-                                    R_is, R1, R2, D_bl, i, s, num_blocks, mod);
-          if (ret)
-            {
-              delete [] R1;
-              delete [] R2;
-              delete [] R_is;
-              delete [] Ri_tmp;
-              delete [] Ri_inv;
-              delete [] D_bl;
-              delete [] D_i;
-              status[th_i] = ERROR_EPS;
-              return;
-            }
-
-          put_full_block (matrix_size, block_size, A, R_is, i, s, num_blocks, mod);
-        }
-
-      /* === put diag block R_{ii} === */
-      //pthread_barrier_wait (barrier);
-      if (i % th_p == th_i)
-        {
-          put_diag_block (matrix_size, block_size, A, Ri_tmp, i, num_blocks, mod);
-          put_vect_block (block_size, D, D_i, i, num_blocks, mod);
-        }
-      //pthread_barrier_wait (barrier);
-    }
-
-  delete [] R1;
-  delete [] R2;
-  delete [] R_is;
-  delete [] Ri_tmp;
-  delete [] Ri_inv;
-  delete [] D_bl;
-  delete [] D_i;
-  pthread_barrier_wait (barrier);
-}
-
-
-
-
-/* ============ calculate block R ============ */
-bool
-calc_diag_block_R2 (int matrix_size, int block_size, matr A, vect D, matr R1,
-                    matr A_bl, vect D_bl, double norm, int i, int div, int mod)
-{
-  int j;
-  bool ret;
-  //get_full_block (matrix_size, block_size, A, A_bl, i, i, div, mod);
-
-  for (j = 0 ; j < i; j++)
-    {
-      get_full_block (matrix_size, block_size, A, R1, j, i, div, mod);
-      get_vect_block (block_size, D, D_bl, j, div, mod);
-      A_minus_RtDR (block_size, A_bl, R1, D_bl, R1);
-    }
-
-  if (i != div)
-    ret = cholesky (block_size, block_size, A_bl, D_bl, norm);
-  else
-    ret = cholesky (mod, block_size, A_bl, D_bl, norm);
-
-  if (ret)
-    return ERROR_EPS;
-
-  //put_diag_block (matrix_size, block_size, A, A_bl, i, div, mod);
-  //put_vect_block (block_size, D, D_bl, i, div, mod);
-
-  return SUCCESS;
-}
-
-
-
-bool
-calc_full_block_R2 (int matrix_size, int block_size, matr A, vect D, matr Ri_inv, vect D_i,
-                    matr R_is, matr R1, matr R2, vect D_bl, int i, int s, int div, int mod)
-{
-  int j;
-
-  //get_full_block (matrix_size, block_size, A, A_bl, i, s, div, mod);
-
-  for (j = 0 ; j < i; j++)
-    {
-      get_full_block (matrix_size, block_size, A, R1, j, i, div, mod);
-      get_full_block (matrix_size, block_size, A, R2, j, s, div, mod);
-      get_vect_block (block_size, D, D_bl, j, div, mod);
-      A_minus_RtDR (block_size, R_is, R1, D_bl, R2);
-    }
-
-  //get_vect_block (block_size, D, D_bl, i, div, mod);
-  DRtA (block_size, D_i, Ri_inv, R_is);
-  //put_full_block (matrix_size, block_size, A, A_bl, i, s, div, mod);
-
-  return SUCCESS;
 }

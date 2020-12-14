@@ -48,7 +48,9 @@ void
 get_vect_block (int block_size, const vect D, vect D_bl, int i_bl, int div, int mod)
 {
   int i, size_lim, shift;
-  //bzero (D_bl, block_size * sizeof (double));
+
+  if (i_bl == div)
+    bzero (D_bl, block_size * sizeof (double));
 
   size_lim = (i_bl < div) ? block_size : mod;
   shift = i_bl * block_size;
@@ -59,6 +61,26 @@ get_vect_block (int block_size, const vect D, vect D_bl, int i_bl, int div, int 
     }
 }
 
+void
+get_column (int matrix_size, int block_size, matr A, column R_col, int j_bl, int div, int mod)
+{
+  int i, j, string_lim, column_lim, shift_column;
+
+  if (j_bl == div)
+    bzero (R_col, matrix_size * block_size * sizeof (double));
+
+  string_lim = (j_bl < div) ? (j_bl + 1) * block_size : matrix_size;
+  column_lim = (j_bl < div) ? block_size : mod;
+  shift_column = j_bl * block_size;
+
+  for (i = 0; i < string_lim; i++)
+    {
+      for (j = 0; j < column_lim; j++)
+        {
+          R_col[i * block_size + j] = A[get_IND (i , j + shift_column, matrix_size)];
+        }
+    }
+}
 
 
 /* ========== put block ========== */
@@ -98,7 +120,6 @@ put_diag_block (int matrix_size, int block_size, matr A, const matr A_bl, int i_
         }
     }
 }
-
 
 void
 put_vect_block (int block_size, vect D, const vect D_bl, int i_bl, int div, int mod)

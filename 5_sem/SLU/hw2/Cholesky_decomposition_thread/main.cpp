@@ -9,12 +9,15 @@ main (int argc, char *argv[])
   char *filename = 0;
   int matrix_size, block_size, print_size, mode, ret;
   double full_time;
-  matr matrix_A;
-  vect vector_B, vector_X, vector_D;
+
+  std::unique_ptr <double []> ptr_matr_A, ptr_vect_B, ptr_vect_X, ptr_vect_D, ptr_vect_S;
+  matr matr_A;
+  vect vect_B, vect_X, vect_D, vect_S;
 
   int thread_num, th_i;
   argument *args;
   pthread_t *tids;
+
   int *status;
   static pthread_barrier_t barrier;
 
@@ -40,6 +43,12 @@ main (int argc, char *argv[])
   if (mode == 0)
     filename = argv[6];
 
+  if (thread_num > (matrix_size + block_size - 1) / block_size)
+    {
+      thread_num = (matrix_size + block_size - 1) / block_size;
+      printf ("WARNING: thread_NUM > block_SIZE - change thread_NUM to %d\n", thread_num);
+    }
+
 
   /* === memory allocation === */
   args = new argument [thread_num];
@@ -49,55 +58,25 @@ main (int argc, char *argv[])
       return ERR_ALLOCATE_MEMORY;
     }
 
-  matrix_A = new double [((matrix_size + 1) * matrix_size) / 2];
-  if (!matrix_A)
-    {
-      delete [] args;
-      perror ("ERROR: Not enough memory for matrix_A\n");
-      return ERR_ALLOCATE_MEMORY;
-    }
-
-  vector_B = new double [matrix_size];
-  if (!vector_B)
-    {
-      delete [] args;
-      delete [] matrix_A;
-      perror ("ERROR: Not enough memory for vector_B\n");
-      return ERR_ALLOCATE_MEMORY;
-    }
-
-  vector_X = new double [matrix_size];
-  if (!vector_X)
-    {
-      delete [] args;
-      delete [] matrix_A;
-      delete [] vector_B;
-      perror ("ERROR: Not enough memory for vector_X\n");
-      return ERR_ALLOCATE_MEMORY;
-    }
-
-  vector_D = new double [matrix_size];
-  if (!vector_D)
-    {
-      delete [] args;
-      delete [] matrix_A;
-      delete [] vector_B;
-      delete [] vector_X;
-      perror ("ERROR: Not enough memory for vector_D\n");
-      return ERR_ALLOCATE_MEMORY;
-    }
-
   status = new int [thread_num];
   if (!status)
     {
       delete [] args;
-      delete [] matrix_A;
-      delete [] vector_B;
-      delete [] vector_X;
-      delete [] vector_D;
       perror ("ERROR: Not enough memory for status\n");
       return ERR_ALLOCATE_MEMORY;
     }
+
+  ptr_matr_A = std::make_unique <double []> (((matrix_size + 1) * matrix_size) / 2);
+  ptr_vect_B = std::make_unique <double []> (matrix_size);
+  ptr_vect_X = std::make_unique <double []> (matrix_size);
+  ptr_vect_D = std::make_unique <double []> (matrix_size);
+  ptr_vect_S = std::make_unique <double []> (block_size * ((matrix_size + block_size - 1) / block_size));
+
+  matr_A = ptr_matr_A.get ();
+  vect_B = ptr_vect_B.get ();
+  vect_X = ptr_vect_X.get ();
+  vect_D = ptr_vect_D.get ();
+  vect_S = ptr_vect_S.get ();
 
 
   /* === initialization === */
@@ -105,10 +84,6 @@ main (int argc, char *argv[])
   if (ret != 0)
     {
       delete [] args;
-      delete [] matrix_A;
-      delete [] vector_B;
-      delete [] vector_X;
-      delete [] vector_D;
       delete [] status;
       perror ("ERROR: thread_barrier_init\n");
       return ERR_PTHREAD_BARRIER_INIT;
@@ -125,10 +100,11 @@ main (int argc, char *argv[])
       args[th_i].mode = mode;
       args[th_i].filename = filename;
 
-      args[th_i].A = matrix_A;
-      args[th_i].B = vector_B;
-      args[th_i].X = vector_X;
-      args[th_i].D = vector_D;
+      args[th_i].A = matr_A;
+      args[th_i].B = vect_B;
+      args[th_i].X = vect_X;
+      args[th_i].D = vect_D;
+      args[th_i].S = vect_S;
 
       args[th_i].barrier = &barrier;
       args[th_i].status = status;
@@ -140,10 +116,6 @@ main (int argc, char *argv[])
   if (!tids)
     {
       delete [] args;
-      delete [] matrix_A;
-      delete [] vector_B;
-      delete [] vector_X;
-      delete [] vector_D;
       delete [] status;
       pthread_barrier_destroy (&barrier);
       perror ("ERROR: Cannot allocate tids\n");
@@ -158,10 +130,6 @@ main (int argc, char *argv[])
       if (ret)
         {
           delete [] args;
-          delete [] matrix_A;
-          delete [] vector_B;
-          delete [] vector_X;
-          delete [] vector_D;
           delete [] status;
           pthread_barrier_destroy (&barrier);
           printf  ("ERROR: Cannot create pthread %d\n", th_i);
@@ -198,10 +166,6 @@ main (int argc, char *argv[])
 
           printf (" for s = %d n = %d m = %d p = %d\n", mode, matrix_size, block_size, thread_num);
           delete [] args;
-          delete [] matrix_A;
-          delete [] vector_B;
-          delete [] vector_X;
-          delete [] vector_D;
           delete [] status;
           delete [] tids;
           pthread_barrier_destroy (&barrier);
@@ -209,88 +173,13 @@ main (int argc, char *argv[])
         }
     }
 
-  /* === solve === */
+  printf ("\n%s : residual = %e elapsed = %.2f for s = %d n = %d m = %d p = %d\n",
+          argv[0], args[0].residual, args[0].time_total, mode, matrix_size, block_size, thread_num);
 
-  printf ("\n   Reinit matrix...\n\n");
-  if (argc == 7)
-    {
-      read_matrix (filename, matrix_size, matrix_A);
-    }
-  else
-    init_matrix (mode, matrix_size, matrix_A);
-  init_vector_B (matrix_size, matrix_A, vector_B);
-
-  double residue = norm_Ax_b (matrix_size, matrix_A, vector_B, vector_X);
-  printf ("%s : residual = %e for s = %d n = %d m = %d p = %d\n",
-          argv[0], residue, mode, matrix_size, block_size, thread_num);
-
-  /*
-  time_solve = clock ();
-  ret = solve (matrix_size,block_size, matrix, vector_B, vector_D,
-               vector_X, block_R1, block_R2, block_Ri, block_A, block_vector_D);
-  time_solve = (clock () - time_solve) / CLOCKS_PER_SEC;
-
-
-  if (ret != SUCCESS)
-    {
-      switch (ret)
-        {
-        case ERROR_SINGULAR_MATRIX_R:
-          printf ("\nERROR: Singular matrix R in Cholesky decomposition\n");
-          break;
-        default:
-          printf ("\nERROR: Unknown error = %d in solve\n", ret);
-        }
-
-      delete[] matrix;
-      delete[] vector_B;
-      delete[] vector_D;
-      delete[] vector_X;
-      delete[] block_R1;
-      delete[] block_R2;
-      delete[] block_Ri;
-      delete[] block_A;
-      delete[] block_vector_D;
-      printf ("Time part of solve func = %.4f\n", time_solve);
-      return -7;
-    }
-
-
-  printf ("\nVector ans:\n");
-  print_matrix (vector_X, matrix_size, 1, print_size);
-
-  printf ("\n   Reinit matrix...\n\n");
-  if (argc == 6)
-    {
-      filename = argv[5];
-      read_matrix (filename, matrix_size, matrix);
-    }
-  else
-    init_matrix (mode, matrix_size, matrix);
-  init_vector_B (matrix_size, matrix, vector_B);
-
-  time_residue = clock ();
-  residue = norm_Ax_b (matrix_size, matrix, vector_B, vector_X);
-  time_residue = (clock () - time_residue) / CLOCKS_PER_SEC;
-  diff_ans = norm_x_x0 (matrix_size, vector_X);
-
-  printf ("Time solve func = %.4f\n", time_solve);
-  printf ("Time culc norm  = %.4f\n", time_residue);
-  printf ("Diff ans =%10.3e\n", diff_ans);
-  printf ("%s : residual = %e elapsed = %.2f for s = %d n = %d m = %d\n",
-          argv[0], residue, time_solve, mode, matrix_size, block_size);
-*/
-
-  printf ("Она любила писать пустые программы\n");
   delete [] args;
-  delete [] matrix_A;
-  delete [] vector_B;
-  delete [] vector_X;
-  delete [] vector_D;
   delete [] status;
   delete [] tids;
   pthread_barrier_destroy (&barrier);
 
   return SUCCESS;
 }
-

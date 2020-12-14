@@ -180,9 +180,8 @@ DRtA (int size, vect D, matr R, matr A) // R_ii
 }
 
 
-
 bool
-inverse_upper_matrix (int size, matr R, matr E, double norm)
+inverse_upper_matrix (int size, int shift, matr R, matr E, double norm)
 {
 
   int i, j, k;
@@ -191,24 +190,58 @@ inverse_upper_matrix (int size, matr R, matr E, double norm)
   //bzero (E, size * size * sizeof (double));
   for (i = size - 1; i >= 0; i--)
     {
-      r_ii = R[i * size + i];
+      r_ii = R[i * shift + i];
       if (is_small (r_ii, EPS * norm))
         return ERROR_EPS;
 
       r_ii = 1 / r_ii;
-      E[i * size + i] = r_ii;
+      E[i * shift + i] = r_ii;
 
       for (j = i + 1; j < size; j++)
         {
           sum = 0;
           for (k = i + 1; k <= j; k++)
             {
-              sum += R[i * size + k] * E[k * size + j];
+              sum += R[i * shift + k] * E[k * shift + j];
             }
-          E[i * size + j] = -sum * r_ii;
+          E[i * shift + j] = -sum * r_ii;
         }
     }
 
-  return 0;
+  return SUCCESS;
 }
 
+
+void
+Bs_MtB (int size, vect B_s, matr M, vect B)
+{
+  int i, j;
+  double sum;
+
+  for (i = 0; i < size; i++)
+    {
+      sum = 0;
+
+      for (j = 0; j < size; j++)
+        sum += M [j * size + i] * B[j];
+
+      B_s[i] -= sum;
+    }
+}
+
+
+void
+RtB (int size, vect Ri_inv, vect B_i, vect B)
+{
+  int i, j;
+  double sum;
+
+  for (i = 0; i < size; i++)
+    {
+      sum = 0;
+      for (j = 0; j <= i; j++)
+        sum += Ri_inv [j * size + i] * B_i[j];
+
+      B[i] = sum;
+    }
+}

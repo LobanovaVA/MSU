@@ -5,11 +5,12 @@ DEBUG = -g #$(GPROF)
 CC = g++ -c
 LD = g++
 
-CFLAGS	= $(DEBUG) -W -Wall -Wextra -pedantic -Werror #-O3
+CFLAGS	= $(DEBUG) -W -Wall -Wextra -pedantic -Werror -O3
 LDFLAGS = $(DEBUG)
 
 
-all: a.out clean_obj
+all: a.out clean_d
+
 
 a.out: $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@ 
@@ -20,9 +21,10 @@ a.out: $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 include $(wildcard *.d)
 
 
-clean_obj:
-	rm -f *.o *.d
+clean_d:
+	rm -f *.d
 	
-clean: clean_obj
-	rm -f *.out 
+clean: clean_d
+	rm -f *.out *.o
+
 

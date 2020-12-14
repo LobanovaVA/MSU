@@ -92,21 +92,19 @@ init_vector_B (int matrix_size, matr matrix, vect vector_B)
 /* ========== thread initialization ========== */
 void
 init_thread (int matrix_size, int block_size, const int mode, char *filename,
-             matr A, vect B, vect X, vect D, int th_p, int th_i,
-             pthread_barrier_t *barrier, int *status)
+             matr A, vect B, int th_p, int th_i, pthread_barrier_t *barrier, int *status)
 {
-  init_zero_thread (matrix_size, block_size, A, B, X, D, th_p, th_i, barrier, status);
-
   if (mode)
     init_matrix_thread (mode, matrix_size, block_size, A, th_p, th_i, barrier);
   else
     read_matrix_thread (filename, matrix_size, A, th_i, barrier, status);
 
   init_vector_B_thread (matrix_size, A, B, th_i, barrier);
+  pthread_barrier_wait (barrier);
 }
 
 void
-init_zero_thread (int matrix_size, int block_size, matr A, vect B, vect X, vect D,
+init_zero_thread (int matrix_size, int block_size, matr A, vect B, vect X, vect D, vect S,
                   int th_p, int th_i, pthread_barrier_t *barrier, int *status)
 {
   int i, j, k;
@@ -121,7 +119,11 @@ init_zero_thread (int matrix_size, int block_size, matr A, vect B, vect X, vect 
           B[j] = 0;
           X[j] = 0;
           D[j] = 0;
+          S[j] = 0;
         }
+
+      for (; j < k + block_size; j++)
+        S[j] = 0;
     }
 
   status[th_i] = SUCCESS;
@@ -229,8 +231,8 @@ print_upper_matrix (matr matrix, int matrix_size, int print_size)
 
 /* ========== thread print ========== */
 void
-print_after_init_thread (matr matrix, vect vector_B, int matrix_size, int print_size,
-                         int th_i, pthread_barrier_t *barrier)
+print_after_init_thread (matr matrix, vect vector_B, int matrix_size,
+                         int print_size, int th_i, pthread_barrier_t *barrier)
 {
   if (th_i == MAIN_THREAD)
     {
@@ -242,3 +244,36 @@ print_after_init_thread (matr matrix, vect vector_B, int matrix_size, int print_
 
   pthread_barrier_wait (barrier);
 }
+
+void
+print_after_solve_thread (vect vector_X, int matrix_size, int print_size,
+                          int th_i, pthread_barrier_t *barrier)
+{
+  if (th_i == MAIN_THREAD)
+    {
+      printf ("\nVector X:\n");
+      print_matrix (vector_X, matrix_size, 1, print_size);
+    }
+
+  pthread_barrier_wait (barrier);
+}
+
+
+void
+print_time_thread (int th_i, double time_thread, double time_total,
+                   pthread_barrier_t *barrier)
+{
+  if (th_i == MAIN_THREAD)
+    {
+      printf ("\nWall clock time: %.2f\n", time_total);
+      printf ("\n|CPU| time |\n------------\n");
+    }
+
+  pthread_barrier_wait (barrier);
+  printf ("|%3d| %5.2f|\n", th_i, time_thread);
+
+  pthread_barrier_wait (barrier);
+}
+
+
+
