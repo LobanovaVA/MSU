@@ -1,4 +1,4 @@
-LIBS  = -lm
+LIBS  = -lm 
 GPROF = -pg
 DEBUG = -g #$(GPROF)
 
@@ -10,6 +10,7 @@ LDFLAGS = $(DEBUG)
 
 
 all: a.out clean_d
+
 
 a.out: $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@ 
@@ -24,5 +25,6 @@ clean_d:
 	rm -f *.d
 	
 clean: clean_d
-	rm -f *.o *.out 
+	rm -f *.out *.o
+
 
