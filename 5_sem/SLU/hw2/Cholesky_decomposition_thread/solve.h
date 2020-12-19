@@ -33,9 +33,6 @@ void calc_y_thread (int matrix_size, int block_size, matr A, vect B,
 void calc_x_thread (int matrix_size, int block_size, matr A, vect B, vect S,
                     int th_p, int th_i, pthread_barrier_t *barrier);
 
-void calc_x_thread2 (int matrix_size, int block_size, matr A, vect B, vect S,
-                     int th_p, int th_i, pthread_barrier_t *barrier);
-
 void DB (int matrix_size, int block_size, vect D, vect B,
          int th_p, int th_i, pthread_barrier_t *barrier);
 

@@ -11,8 +11,12 @@ void DRtA (int size, vect D, matr R, matr A);
 
 bool inverse_upper_matrix  (int size, int shift, matr R, matr E, double norm);
 
-void RtB (int size, vect Ri_inv, vect B_diff, vect B);
 void Bs_MtB (int size, vect B_s, matr M, vect B);
+void RtB (int size, vect Ri_inv, vect B_diff, vect B);
+
+void Bdiff_MB (int size, vect B_diff, matr M, vect B);
+void Bdiff_total (int size, int th_p, vect B_diff, vect S);
+void RB (int size, vect Ri_inv, vect B_i, vect B);
 
 #endif
 

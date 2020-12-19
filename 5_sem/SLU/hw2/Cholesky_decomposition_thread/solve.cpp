@@ -159,7 +159,7 @@ solve_thread (int matrix_size, int block_size, matr A, vect B, vect X, vect D, v
   calc_x_thread (matrix_size, block_size, A, B, S, th_p, th_i, barrier);
 
   if (th_i == MAIN_THREAD)
-      memcpy (X, B, matrix_size * sizeof (double));
+    memcpy (X, B, matrix_size * sizeof (double));
 
   pthread_barrier_wait (barrier);
 }
@@ -392,20 +392,18 @@ calc_y_thread (int matrix_size, int block_size, matr A, vect B,
 
 
 void
-calc_x_thread2 (int matrix_size, int block_size, matr A, vect B, vect S,
+calc_x_thread (int matrix_size, int block_size, matr A, vect B, vect S,
                 int th_p, int th_i, pthread_barrier_t *barrier)
 {
 
   int squared_block_size = block_size * block_size;
-  int num_blocks, mod, block_lim, column_lim = block_size;
-  int i, j, s;
-  double sum;
+  int num_blocks, mod, block_lim, column_lim;
+  int i, s;
 
-  std::unique_ptr <double []> ptr_R_bl, ptr_Ri_inv, ptr_D_bl, ptr_B_bl, ptr_B_diff;
+  std::unique_ptr <double []> ptr_R_bl, ptr_Ri_inv, ptr_B_bl, ptr_B_diff;
 
   matr_bl R_bl, Ri_inv;
-  vect_bl D_bl, B_bl, B_diff;
-  (void) D_bl;
+  vect_bl B_bl, B_diff;
 
   num_blocks = matrix_size / block_size;
   mod = matrix_size % block_size;
@@ -414,97 +412,52 @@ calc_x_thread2 (int matrix_size, int block_size, matr A, vect B, vect S,
 
   /* === memory allocation === */
   ptr_R_bl = std::make_unique <double []> (squared_block_size);
-  //ptr_R_si = std::make_unique <double []> (squared_block_size);
   ptr_Ri_inv = std::make_unique <double []> (squared_block_size);
-  ptr_D_bl = std::make_unique <double []> (block_size);
   ptr_B_bl = std::make_unique <double []> (block_size);
   ptr_B_diff = std::make_unique <double []> (block_size);
 
   R_bl = ptr_R_bl.get ();
-  //R_si = ptr_R_si.get ();
   Ri_inv = ptr_Ri_inv.get ();
-  D_bl = ptr_D_bl.get ();
   B_bl = ptr_B_bl.get ();
   B_diff = ptr_B_diff.get ();
 
-  for (i = 0; i < block_lim; i++)
+
+  /* === calculate solution -> B === */
+  for (i = block_lim - 1; i >= 0; i--)
     {
-      if (th_i == MAIN_THREAD) printf ("\n =========== i = %d \n", i);
       if (i == num_blocks)
         column_lim = mod;
+      else
+        column_lim = block_size;
 
       if (i % th_p < th_i)
-        s = i + (i % th_p) - th_i;
+        s = i - (i % th_p) + th_i;
       else
-        s = i + (i % th_p) - th_p - th_i;
+        s = i - (i % th_p) + th_p + th_i;
 
+      /* === calculate diff for B_{i} from B_{s} === */
       bzero (B_diff, block_size * sizeof (double));
-      for (; s >= 0; s -= th_p)
+      for (; s < block_lim; s += th_p)
         {
-          printf ("\n th_i = %d s =%d \n", th_i, s);
-          get_full_block (matrix_size, block_size, A, R_bl, s, i, num_blocks, mod);
-          //          printf ("\nR s = %d i = %d\n", s, i);
-          //          print_matrix(R_bl, block_size, block_size, matrix_size);
-
+          get_full_block (matrix_size, block_size, A, R_bl, i, s, num_blocks, mod);
           get_vect_block (block_size, B, B_bl, s, num_blocks, mod);
-          //          printf ("\nB s = %d\n", s);
-          //          print_matrix(B_bl, block_size, 1, matrix_size);
-
-          //diff_MtB (block_size, B_diff, R_bl, B_bl);
+          Bdiff_MB (block_size, B_diff, R_bl, B_bl);
         }
-      put_vect_block (block_size, S, B_diff, th_i, num_blocks, mod);
+      put_vect_block (block_size, S, B_diff, th_i, num_blocks, block_size);
 
-      if (th_i == MAIN_THREAD) {
-          printf ("\nB_diff ALLL\n");
-          print_matrix(S, 9, 1, 9);}
-
+      /* === calculate B_{i} -> B === */
       pthread_barrier_wait (barrier);
       if (i % th_p == th_i)
         {
-
+          /* === inverse diag block R_{ii} -> Ri_inv === */
           get_full_block (matrix_size, block_size, A, R_bl, i, i, num_blocks, mod);
+          inverse_upper_matrix (column_lim, block_size, R_bl, Ri_inv, -1);
 
-          //          printf ("\n R i = %d\n", i);
-          //          print_matrix(R_bl, block_size, block_size, matrix_size);
-
-
-          if (i != num_blocks)
-            inverse_upper_matrix (block_size, block_size, R_bl, Ri_inv, -1);
-          else
-            inverse_upper_matrix (column_lim, block_size, R_bl, Ri_inv, -1);
-
-          //          printf ("\nB RHS i = %d\n", i);
-          //          print_matrix(B, matrix_size, 1, matrix_size);
-
+          /* === calculate inv_R_{ii} * (B_{i} + B_diff) -> B === */
           get_vect_block (block_size, B, B_diff, i, num_blocks, mod);
-
-          //          printf ("\n до вычитания B i = %d\n", i);
-          //          print_matrix(B_diff, block_size, 1, matrix_size);
-
-          for (j = 0; j < block_size; j ++)
-            {
-              sum = 0;
-              for (s = 0; s < th_p; s++)
-                sum += S[j + s * block_size];
-              B_diff[j] += sum;
-            }
-
-          //          printf ("\n до умнржения B i = %d\n", i);
-          //          print_matrix(B_diff, block_size, 1, matrix_size);
-
-          //          printf ("\n R inv = %d\n", i);
-          //          print_matrix(Ri_inv, block_size, block_size, matrix_size);
-
-          RtB (block_size, Ri_inv, B_diff, B_bl);
+          Bdiff_total (block_size, th_p, B_diff, S);
+          RB (block_size, Ri_inv, B_diff, B_bl);
           put_vect_block (block_size, B, B_bl, i, num_blocks, mod);
-
-          //          printf ("\n после  умнржения B i = %d\n", i);
-          //          print_matrix(B_bl, block_size, 1, matrix_size);
-
-
-          //          printf ("\nAns i = %d\n", i);
-          //          print_matrix(B, matrix_size, 1, matrix_size);
-
         }
       pthread_barrier_wait (barrier);
     }
@@ -512,35 +465,6 @@ calc_x_thread2 (int matrix_size, int block_size, matr A, vect B, vect S,
   pthread_barrier_wait (barrier);
 
 }
-
-
-void
-calc_x_thread (int matrix_size, int block_size, matr A, vect B, vect S,
-               int th_p, int th_i, pthread_barrier_t *barrier)
-{
-  int i, j;
-  double sum;
-
-  (void) block_size;
-  (void) th_p;
-  (void) S;
-
-  if (th_i == MAIN_THREAD)
-    {
-      for (i = matrix_size - 1; i >= 0; i--)
-        {
-          sum = 0;
-          for (j = matrix_size - 1; j > i; j--)
-            {
-              sum += B[j] * A[get_IND(i, j, matrix_size)];
-            }
-          B[i] = (B[i] - sum) / A[get_IND(i, i, matrix_size)];
-        }
-    }
-
-  pthread_barrier_wait (barrier);
-}
-
 
 
 void
@@ -556,22 +480,4 @@ DB (int matrix_size, int block_size, vect D, vect B,
     }
 
   pthread_barrier_wait (barrier);
-}
-
-
-void
-calc_x_not_block (int matrix_size, matr A, vect D, vect B)
-{
-  int i, j;
-  double sum;
-
-  for (i = matrix_size - 1; i >= 0; i--)
-    {
-      sum = 0;
-      for (j = matrix_size - 1; j > i; j--)
-        {
-          sum += B[j] * A[get_IND(i, j, matrix_size)];
-        }
-      B[i] = D[i] * (B[i] - sum * D[i]) / A[get_IND(i, i, matrix_size)];
-    }
 }

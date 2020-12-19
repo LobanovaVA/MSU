@@ -245,3 +245,53 @@ RtB (int size, vect Ri_inv, vect B_i, vect B)
       B[i] = sum;
     }
 }
+
+
+void
+Bdiff_MB (int size, vect B_diff, matr M, vect B)
+{
+  int i, j;
+  double sum;
+
+  for (i = 0; i < size; i++)
+    {
+      sum = 0;
+
+      for (j = 0; j < size; j++)
+        sum += M [i * size + j] * B[j];
+
+      B_diff[i] -= sum;
+    }
+}
+
+void
+Bdiff_total (int size, int th_p, vect B_diff, vect S)
+{
+  int j, s;
+  double sum;
+
+  for (j = 0; j < size; j ++)
+    {
+      sum = 0;
+      for (s = 0; s < th_p; s++)
+        sum += S[j + s * size];
+
+      B_diff[j] += sum;
+    }
+}
+
+void
+RB (int size, vect Ri_inv, vect B_i, vect B)
+{
+  int i, j;
+  double sum;
+
+  for (i = 0; i < size; i++)
+    {
+      sum = 0;
+      for (j = i; j < size; j++)
+        sum += Ri_inv [i * size + j] * B_i[j];
+
+      B[i] = sum;
+    }
+}
