@@ -62,10 +62,6 @@ thread_func (void *data)
   /* === solve === */
   solve_thread (matrix_size, block_size, A, B, X, D, S, th_p, th_i, barrier, status);
 
-  /* no barrier used because all threads get ERROR_EPS */
-//  if (status[th_i] != SUCCESS)
-//    return nullptr;
-
   for (int i = 0; i < th_p; i++)
     {
       if (status[i] != SUCCESS)

@@ -224,18 +224,6 @@ cholesky_thread (int matrix_size, int block_size, matr A, vect D, double norm,
           return;
         }
 
-      /* === inverse diag block R_{ii} -> Ri_inv === */
-      if (i != num_blocks)
-        {
-          ret = inverse_upper_matrix (block_size, block_size, Ri_tmp, Ri_inv, norm);
-          if (ret)
-            {
-              /* no barrier used because all threads inverse R_{ii} and all get ERROR_EPS */
-              status[th_i] = ERROR_EPS;
-              return;
-            }
-        }
-
       /* === put diag block R_{ii} and block D_{i} === */
       if (i % th_p == th_i)
         {
@@ -248,6 +236,18 @@ cholesky_thread (int matrix_size, int block_size, matr A, vect D, double norm,
         s = i - (i % th_p) + th_i;
       else
         s = i - (i % th_p) + th_p + th_i;
+
+      /* === inverse diag block R_{ii} -> Ri_inv === */
+      if (s < block_lim)
+        {
+          ret = inverse_upper_matrix (block_size, block_size, Ri_tmp, Ri_inv, norm);
+          if (ret)
+            {
+              /* no barrier used because all threads inverse R_{ii} and all get ERROR_EPS */
+              status[th_i] = ERROR_EPS;
+              return;
+            }
+        }
 
       for (; s < block_lim; s += th_p)
         {

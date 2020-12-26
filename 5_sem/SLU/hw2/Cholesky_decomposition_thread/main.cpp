@@ -8,17 +8,20 @@ main (int argc, char *argv[])
 
   char *filename = 0;
   int matrix_size, block_size, print_size, mode, ret;
-  double full_time;
+  int thread_num, th_i;
 
   std::unique_ptr <double []> ptr_matr_A, ptr_vect_B, ptr_vect_X, ptr_vect_D, ptr_vect_S;
   matr matr_A;
   vect vect_B, vect_X, vect_D, vect_S;
 
-  int thread_num, th_i;
+  std::unique_ptr <argument []> ptr_args;
+  std::unique_ptr <pthread_t []> ptr_tids;
+  std::unique_ptr <int []> ptr_status;
+
   argument *args;
   pthread_t *tids;
-
   int *status;
+
   static pthread_barrier_t barrier;
 
 
@@ -51,26 +54,19 @@ main (int argc, char *argv[])
 
 
   /* === memory allocation === */
-  args = new argument [thread_num];
-  if (!args)
-    {
-      perror ("ERROR: Can not allocate memory for args\n");
-      return ERR_ALLOCATE_MEMORY;
-    }
-
-  status = new int [thread_num];
-  if (!status)
-    {
-      delete [] args;
-      perror ("ERROR: Not enough memory for status\n");
-      return ERR_ALLOCATE_MEMORY;
-    }
+  ptr_args = std::make_unique <argument []> (thread_num);
+  ptr_tids = std::make_unique <pthread_t []> (thread_num);
+  ptr_status = std::make_unique <int []> (thread_num);
 
   ptr_matr_A = std::make_unique <double []> (((matrix_size + 1) * matrix_size) / 2);
   ptr_vect_B = std::make_unique <double []> (matrix_size);
   ptr_vect_X = std::make_unique <double []> (matrix_size);
   ptr_vect_D = std::make_unique <double []> (matrix_size);
   ptr_vect_S = std::make_unique <double []> (block_size * ((matrix_size + block_size - 1) / block_size));
+
+  args = ptr_args.get ();
+  tids = ptr_tids.get ();
+  status = ptr_status.get ();
 
   matr_A = ptr_matr_A.get ();
   vect_B = ptr_vect_B.get ();
@@ -83,8 +79,6 @@ main (int argc, char *argv[])
   ret = pthread_barrier_init (&barrier, nullptr, thread_num);
   if (ret != 0)
     {
-      delete [] args;
-      delete [] status;
       perror ("ERROR: thread_barrier_init\n");
       return ERR_PTHREAD_BARRIER_INIT;
     }
@@ -112,25 +106,11 @@ main (int argc, char *argv[])
 
 
   /* === pthread === */
-  tids =  new pthread_t[thread_num];
-  if (!tids)
-    {
-      delete [] args;
-      delete [] status;
-      pthread_barrier_destroy (&barrier);
-      perror ("ERROR: Cannot allocate tids\n");
-      return ERR_ALLOCATE_MEMORY;
-    }
-
-  full_time = get_full_time ();
-
   for (th_i = 1; th_i < thread_num; th_i++)
     {
       ret = pthread_create (tids + th_i, nullptr, &thread_func, args + th_i);
       if (ret)
         {
-          delete [] args;
-          delete [] status;
           pthread_barrier_destroy (&barrier);
           printf  ("ERROR: Cannot create pthread %d\n", th_i);
           return ERR_PTHREAD_CREATE;
@@ -139,7 +119,6 @@ main (int argc, char *argv[])
 
   thread_func (args + 0);
 
-  full_time = get_full_time () - full_time;
 
   /* === check errors === */
   for (th_i = 0; th_i < thread_num; th_i++)
@@ -165,9 +144,6 @@ main (int argc, char *argv[])
             }
 
           printf (" for s = %d n = %d m = %d p = %d\n", mode, matrix_size, block_size, thread_num);
-          delete [] args;
-          delete [] status;
-          delete [] tids;
           pthread_barrier_destroy (&barrier);
           return -1;
         }
@@ -176,10 +152,7 @@ main (int argc, char *argv[])
   printf ("\n%s : residual = %e elapsed = %.2f for s = %d n = %d m = %d p = %d\n",
           argv[0], args[0].residual, args[0].time_total, mode, matrix_size, block_size, thread_num);
 
-  delete [] args;
-  delete [] status;
-  delete [] tids;
-  pthread_barrier_destroy (&barrier);
 
+  pthread_barrier_destroy (&barrier);
   return SUCCESS;
 }
