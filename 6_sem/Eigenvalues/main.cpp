@@ -130,7 +130,7 @@ main (int argc, char *argv[])
   printf ("\nResidual invariants after solve:\n  residual_track  = %.3e\n  residual_lenght = %.3e\n",
           fabs (track_trans - track_res), fabs (lenght_trans - lenght_res));
 
-  printf ("\nResidual invariants after ALL solve:\n  residual_track  = %.3e\n  residual_lenght = %.3e\n",
+  printf ("\nResidual invariants after\n transformation + solve:\n  residual_track  = %.3e\n  residual_lenght = %.3e\n",
           fabs (track_orig - track_res), fabs (lenght_orig - lenght_res));
 
   printf ("\nTransformation time = %.2f\nSolve time = %.2f\n",
@@ -139,7 +139,7 @@ main (int argc, char *argv[])
   printf ("\nIterations = %d\n", ret);
   printf ("=========================================\n");
 
-  printf ("\n%s : matrix_size = %d print_size = %d eps = %e mode = %d \n",
+  printf ("\n%s : matrix_size = %d print_size = %d eps = %.3e mode = %d \n",
           argv[0], matrix_size, print_size, eps, mode);
 
   return SUCCESS;
