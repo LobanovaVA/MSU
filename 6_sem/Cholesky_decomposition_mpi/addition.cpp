@@ -1,9 +1,9 @@
 #include "addition.h"
 
-size_t
-get_IND (size_t i, size_t j, size_t matrix_size)
+int
+get_IND (int i, int j, int matrix_size)
 {
-  size_t first_ind, second_ind, pos;
+  int first_ind, second_ind, pos;
   first_ind  = (i < j) ? i : j;
   second_ind = (i < j) ? j : i;
   pos = first_ind;
@@ -12,7 +12,7 @@ get_IND (size_t i, size_t j, size_t matrix_size)
   return pos;
 }
 
-inline bool
+bool
 is_small (double value, double eps)
 {
   return fabs (value) < eps;
@@ -64,6 +64,7 @@ get_args (const int argc, char **argv, size_arguments &size_args, int &mode)
   size_args.set_args (matrix_size, block_size, print_size);
   return NO_ERROR;
 }
+
 
 void
 check_errors (int ret, const char *progname, const char *filename)

@@ -1,9 +1,13 @@
 #include "mpi.h"
 #include "size_arguments.h"
 
+
 void
 size_arguments::set_args (int m_s, int bl_s, int pr_s)
 {
+  MPI_Comm_rank (MPI_COMM_WORLD, &my_rank);
+  MPI_Comm_size (MPI_COMM_WORLD, &comm_size);
+
   matrix_size = m_s;
   block_size = bl_s;
   print_size = (pr_s < m_s) ? pr_s : m_s;
@@ -12,8 +16,8 @@ size_arguments::set_args (int m_s, int bl_s, int pr_s)
   div = matrix_size / block_size;
   block_lim = div + (mod > 0);
 
-  MPI_Comm_rank (MPI_COMM_WORLD, &my_rank);
-  MPI_Comm_size (MPI_COMM_WORLD, &comm_size);
+  squared_block_size = block_size * block_size;
+  buff_column_size = matrix_size * block_size;
 }
 
 int
@@ -25,7 +29,7 @@ size_arguments::get_col_width (int ind)
 }
 
 int
-size_arguments::get_column_size (int ind)
+size_arguments::get_alloc_column_size (int ind)
 {
   int res_size = 0;
   int col_width = get_col_width (ind);
@@ -44,7 +48,7 @@ size_arguments::get_alloc_size ()
   for (int j = 0; j < block_lim; j++)
     {
       if (j % comm_size == my_rank)
-        sum += get_column_size (j);
+        sum += get_alloc_column_size (j);
     }
 
   return sum;
@@ -58,3 +62,13 @@ size_arguments::get_local_block_lim ()
 
   return bl_div + (bl_mod > 0 && my_rank < bl_mod);
 }
+
+int
+size_arguments::get_start_ind (int ind)
+{
+  if (ind % comm_size < my_rank)
+    return ind - (ind % comm_size) + my_rank;
+  else
+    return ind - (ind % comm_size) + my_rank + comm_size;
+}
+

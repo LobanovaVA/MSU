@@ -12,13 +12,13 @@ reorganize_matrix (size_arguments &size_args, matr matrix, matr *ptr_columns)
       if (j % size_args.comm_size == size_args.my_rank)
         {
           ptr_columns[j / size_args.comm_size] = matrix + sum;
-          sum += size_args.get_column_size (j);
+          sum += size_args.get_alloc_column_size (j);
         }
     }
 }
 
 
-/* ========================================= initialization ========================================= */
+// ========================================= initialization ========================================= //
 double
 f (int s, int n, int i, int j)
 {
@@ -76,7 +76,7 @@ init_matrix (const int mode, size_arguments &size_args, matr *ptr_columns)
 }
 
 
-/* ========================================= read ========================================= */
+// ============================================== read ============================================== //
 int read_array (FILE *fp, vect read_row, int size)
 {
   for (int i = 0; i < size; i++)
@@ -91,7 +91,7 @@ int read_array (FILE *fp, vect read_row, int size)
 }
 
 int
-read_matrix (const char *filename, size_arguments &size_args, matr *ptr_columns)
+MPI_read_matrix (const char *filename, size_arguments &size_args, matr *ptr_columns)
 {
   FILE *fp = nullptr;
   int err = NO_ERROR;
@@ -123,16 +123,16 @@ read_matrix (const char *filename, size_arguments &size_args, matr *ptr_columns)
 
       MPI_Bcast (&err, 1, MPI_INT, MAIN_PROCESS, MPI_COMM_WORLD);
 
-      action_elem_row (i, size_args, ptr_columns, read_row, READ);
+      MPI_action_elem_row (i, size_args, ptr_columns, read_row, READ);
     }
 
   return err;
 }
 
 
-/* ========================================= print ========================================= */
+// ============================================= print ============================================== //
 void
-print_matrix (size_arguments &size_args, matr *ptr_columns)
+MPI_print_matrix (size_arguments &size_args, matr *ptr_columns)
 {
   std::unique_ptr <double []> ptr_printed_row;
   vect printed_row = nullptr;
@@ -145,7 +145,7 @@ print_matrix (size_arguments &size_args, matr *ptr_columns)
 
   for (int i = 0; i < size_args.print_size; i++)
     {
-      action_elem_row (i, size_args, ptr_columns, printed_row, PRINT);
+      MPI_action_elem_row (i, size_args, ptr_columns, printed_row, PRINT);
 
       if (size_args.my_rank == MAIN_PROCESS)
         {
@@ -160,3 +160,17 @@ print_matrix (size_arguments &size_args, matr *ptr_columns)
     }
 }
 
+void
+print_matrix (double *data, int line_size, int column_size, int print_size)
+{
+  int line_lim = (print_size < line_size) ? print_size : line_size;
+  int column_lim = (print_size < column_size) ? print_size : column_size;
+
+  for (int i = 0; i < line_lim; i++)
+    {
+      for (int j = 0; j < column_lim; j++)
+        printf (" %10.3e", data[i * column_size + j]);
+
+      printf ("\n");
+    }
+}

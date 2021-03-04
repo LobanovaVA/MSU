@@ -25,16 +25,10 @@
 #include <time.h>
 #include <math.h>
 #include <fenv.h>
-#include <string.h>
 #include <stdbool.h>
-#include <unistd.h>
-#include <sched.h>
-#include <sys/sysinfo.h>
-#include <pthread.h>
-
-#include <iostream>
-#include <string.h>
+#include <stdarg.h>
 #include <memory>
+
 #include "mpi.h"
 
 #include "size_arguments.h"
@@ -48,6 +42,8 @@ constexpr double EPS = 1.e-15;
 
 using matr = double *;
 using vect = double *;
+using matr_bl = double *;
+using vect_bl = double *;
 using column_bl = double *;
 using buff_ptr = double *;
 
@@ -55,8 +51,8 @@ using buff_ptr = double *;
 enum action_type {READ, PRINT};
 
 
-size_t get_IND (size_t i, size_t j, size_t matrix_size);
-inline bool is_small (double value, double eps);
+int get_IND (int i, int j, int matrix_size);
+bool is_small (double value, double eps);
 
 void printf_main_process (const char *format, ...);
 
