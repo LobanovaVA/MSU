@@ -67,20 +67,33 @@ get_args (const int argc, char **argv, size_arguments &size_args, int &mode)
 
 
 void
-check_errors (int ret, const char *progname, const char *filename)
+check_read_errors (int ret, const char *progname, const char *filename)
 {
   switch (ret)
     {
     case ERROR_CANNOT_OPEN_INPUT_FILE:
-      printf_main_process ("%s : ERROR: Cannot open input file %s\n", progname, filename);
+      printf_main_process ("%s : ERROR: Cannot open input file %s", progname, filename);
       break;
     case ERROR_CANNOT_READ_INPUT_FILE:
-      printf_main_process ("%s : ERROR: Cannot read input file %s\n", progname, filename);
+      printf_main_process ("%s : ERROR: Cannot read input file %s", progname, filename);
       break;
     case ERROR_INCORRECT_MATRIX_TYPE:
-      printf_main_process ("%s : ERROR: Incorrect matrix type in %s\n", progname, filename);
+      printf_main_process ("%s : ERROR: Incorrect matrix type in %s", progname, filename);
       break;
     default:
-      printf_main_process ("%s : ERROR: Unknown error %d in %s\n", progname, ret, filename);
+      printf_main_process ("%s : ERROR: Unknown error %d in %s", progname, ret, filename);
+    }
+}
+
+void
+check_solve_errors (int ret, const char *progname)
+{
+  switch (ret)
+    {
+    case ERROR_EPS:
+      printf_main_process ("%s : ERROR: Singular matrix R in Cholesky decomposition", progname);
+      break;
+    default:
+      printf_main_process ("%s : ERROR: Unknown error %d", progname, ret);
     }
 }

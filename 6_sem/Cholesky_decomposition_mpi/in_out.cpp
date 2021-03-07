@@ -75,6 +75,35 @@ init_matrix (const int mode, size_arguments &size_args, matr *ptr_columns)
     }
 }
 
+void MPI_init_vector (size_arguments &size_args, matr *ptr_columns, vect B)
+{
+  double sum;
+  std::unique_ptr <double []> ptr_elem_row;
+  vect elem_row = nullptr;
+
+  if (size_args.my_rank == MAIN_PROCESS)
+    {
+      ptr_elem_row = std::make_unique <double []> (size_args.matrix_size);
+      elem_row = ptr_elem_row.get ();
+    }
+
+  for (int i = 0; i < size_args.matrix_size; i++)
+    {
+      MPI_action_elem_row (i, size_args, ptr_columns, elem_row, GATHER);
+
+      if (size_args.my_rank == MAIN_PROCESS)
+        {
+          sum = 0;
+          for (int k = 0; k < size_args.matrix_size; k += 2)
+            sum += elem_row[k];
+
+          B[i] = sum;
+        }
+
+      MPI_Bcast (B + i, 1, MPI_DOUBLE, MAIN_PROCESS, MPI_COMM_WORLD);
+    }
+}
+
 
 // ============================================== read ============================================== //
 int read_array (FILE *fp, vect read_row, int size)
@@ -123,7 +152,7 @@ MPI_read_matrix (const char *filename, size_arguments &size_args, matr *ptr_colu
 
       MPI_Bcast (&err, 1, MPI_INT, MAIN_PROCESS, MPI_COMM_WORLD);
 
-      MPI_action_elem_row (i, size_args, ptr_columns, read_row, READ);
+      MPI_action_elem_row (i, size_args, ptr_columns, read_row, SCATTER);
     }
 
   return err;
@@ -132,10 +161,11 @@ MPI_read_matrix (const char *filename, size_arguments &size_args, matr *ptr_colu
 
 // ============================================= print ============================================== //
 void
-MPI_print_matrix (size_arguments &size_args, matr *ptr_columns)
+MPI_print_matrix (size_arguments &size_args, matr *ptr_columns, matrix_type matr_t)
 {
   std::unique_ptr <double []> ptr_printed_row;
   vect printed_row = nullptr;
+  int start_print;
 
   if (size_args.my_rank == MAIN_PROCESS)
     {
@@ -145,14 +175,22 @@ MPI_print_matrix (size_arguments &size_args, matr *ptr_columns)
 
   for (int i = 0; i < size_args.print_size; i++)
     {
-      MPI_action_elem_row (i, size_args, ptr_columns, printed_row, PRINT);
+      MPI_action_elem_row (i, size_args, ptr_columns, printed_row, GATHER);
 
       if (size_args.my_rank == MAIN_PROCESS)
         {
-          for (int j = 0; j < i; j++)
+          switch(matr_t)
+            {
+            case SYMM:
+              start_print = 0;  break;
+            case UPPER:
+              start_print = i; break;
+            }
+
+          for (int j = 0; j < start_print; j++)
             printf ("     --    ");
 
-          for (int j = i; j < size_args.print_size; j++)
+          for (int j = start_print; j < size_args.print_size; j++)
             printf (" %10.3e", printed_row[j]);
 
           printf ("\n");
@@ -161,10 +199,18 @@ MPI_print_matrix (size_arguments &size_args, matr *ptr_columns)
 }
 
 void
-print_matrix (double *data, int line_size, int column_size, int print_size)
+print_matrix (double *data, int line_size, int column_size, int print_size, process_type print_by)
 {
   int line_lim = (print_size < line_size) ? print_size : line_size;
   int column_lim = (print_size < column_size) ? print_size : column_size;
+
+  if (print_by == MAIN)
+    {
+      int my_rank;
+      MPI_Comm_rank (MPI_COMM_WORLD, &my_rank);
+      if (my_rank != MAIN_PROCESS)
+        return;
+    }
 
   for (int i = 0; i < line_lim; i++)
     {

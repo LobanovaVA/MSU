@@ -48,7 +48,9 @@ using column_bl = double *;
 using buff_ptr = double *;
 
 
-enum action_type {READ, PRINT};
+enum action_type {SCATTER, GATHER};
+enum matrix_type {SYMM, UPPER};
+enum process_type {ALL, MAIN};
 
 
 int get_IND (int i, int j, int matrix_size);
@@ -57,7 +59,8 @@ bool is_small (double value, double eps);
 void printf_main_process (const char *format, ...);
 
 int get_args (const int argc, char **argv, size_arguments &size_args, int &mode);
-void check_errors (int ret, const char *progname, const char *filename);
+void check_read_errors  (int ret, const char *progname, const char *filename);
+void check_solve_errors (int ret, const char *progname);
 
 
 #define CMP(a,b) (!((a) > (b) || (a) < (b)))

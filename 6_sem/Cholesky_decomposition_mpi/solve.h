@@ -3,7 +3,7 @@
 
 #include "addition.h"
 
-int MPI_solve (size_arguments &size_args, matr *ptr_columns, vect D);
+int MPI_solve (size_arguments &size_args, matr *ptr_columns, vect B, vect D);
 
 int MPI_cholesky (size_arguments &size_args, matr *ptr_columns, vect D, buff_ptr diag_inv, double eps);
 int cholesky (int size, int shift, matr A, vect D, double eps);

@@ -34,6 +34,8 @@ public:
   int get_column_owner (int ind) { return ind % comm_size; }
 
   int get_start_ind (int ind);
+  int get_global_bl_ind (int loc_bl) { return loc_bl * comm_size + my_rank;}
+
 };
 
 #endif

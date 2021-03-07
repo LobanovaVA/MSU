@@ -1,22 +1,22 @@
 #include "solve.h"
+#include "norm.h"
 #include "block_action.h"
 #include "matr_operation.h"
 
 #include "in_out.h"
 
 int
-MPI_solve (size_arguments &size_args, matr *ptr_columns, vect D)
+MPI_solve (size_arguments &size_args, matr *ptr_columns, vect B, vect D)
 {
+  (void) B;
   int err = NO_ERROR;
-  double norm = 1;
+  double norm;
 
-  // === memory allocation === //
   std::unique_ptr <double []> ptr_diag_inv;
   ptr_diag_inv = std::make_unique <double []> (size_args.block_lim * size_args.squared_block_size);
   buff_ptr diag_inv = ptr_diag_inv.get ();
 
-
-  //TODO norm = norm_A ();
+  norm = MPI_norm_A (size_args, ptr_columns);
   printf_main_process ("\nMatrix norm = %f\n", norm);
 
   err = MPI_cholesky (size_args, ptr_columns, D, diag_inv, norm * EPS);
@@ -204,7 +204,7 @@ calc_full_block_R (int i_bl, int s_bl, size_arguments &size_args,  matr *ptr_col
 
   DRtA (size_args.block_size, D_j, Ri_inv, R_is);
   put_full_block (i_bl, s_bl, size_args, ptr_columns, R_is);
-}
+}//TODO for last block other func without get/put block
 
 
 //void

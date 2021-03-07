@@ -11,7 +11,7 @@ LDFLAGS = $(DEBUG)
 
 NAME = a.out
 #OBJS = $(patsubst %.cpp,%.o,$(wildcard *.cpp))
-OBJS = addition.o size_arguments.o in_out.o block_action.o matr_operation.o solve.o main.o
+OBJS = addition.o size_arguments.o in_out.o block_action.o matr_operation.o norm.o solve.o main.o
 
 all : $(NAME)
 

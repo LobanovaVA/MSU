@@ -71,4 +71,3 @@ size_arguments::get_start_ind (int ind)
   else
     return ind - (ind % comm_size) + my_rank + comm_size;
 }
-
