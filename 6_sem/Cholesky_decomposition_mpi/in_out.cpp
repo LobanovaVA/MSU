@@ -7,12 +7,12 @@ reorganize_matrix (size_arguments &size_args, matr matrix, matr *ptr_columns)
 {
   int sum = 0;
 
-  for (int j = 0; j < size_args.block_lim; j++)
+  for (int j_bl = 0; j_bl < size_args.block_lim; j_bl++)
     {
-      if (j % size_args.comm_size == size_args.my_rank)
+      if (size_args.is_my_column (j_bl))
         {
-          ptr_columns[j / size_args.comm_size] = matrix + sum;
-          sum += size_args.get_alloc_column_size (j);
+          ptr_columns[size_args.get_local_bl_ind (j_bl)] = matrix + sum;
+          sum += size_args.get_alloc_column_size (j_bl);
         }
     }
 }
@@ -57,7 +57,7 @@ init_matrix (const int mode, size_arguments &size_args, matr *ptr_columns)
 
       if (j_bl % size_args.comm_size == size_args.my_rank)
         {
-          curr_column = ptr_columns[j_bl / size_args.comm_size];
+          curr_column = ptr_columns[size_args.get_local_bl_ind (j_bl)];
           int i_lim = j_bl * size_args.block_size;
           for (i = 0; i < i_lim; i++)
             {

@@ -35,6 +35,7 @@ public:
 
   int get_start_ind (int ind);
   int get_global_bl_ind (int loc_bl) { return loc_bl * comm_size + my_rank;}
+  int get_local_bl_ind (int glob_bl) { return glob_bl / comm_size; }
 
 };
 

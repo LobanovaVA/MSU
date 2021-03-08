@@ -16,7 +16,7 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
       if (size_args.my_rank == owner)
         {
           // === elements before diagonal === //
-          msg_place = ptr_columns[ind_bl / size_args.comm_size];
+          msg_place = ptr_columns[size_args.get_local_bl_ind (ind_bl)];
           msg_place += ind % size_args.block_size;
 
           for (int j = 0; j < ind_bl_mult_block_size; j++)
@@ -30,7 +30,7 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
             }
 
           // === 1-st part elements of the diagonal block === //
-          msg_place = ptr_columns[ind_bl / size_args.comm_size];
+          msg_place = ptr_columns[size_args.get_local_bl_ind (ind_bl)];
           msg_place += ind_bl_mult_block_size * size_args.get_col_width (ind_bl);
 
           for (int j = ind_bl_mult_block_size; j < ind; j++)
@@ -55,7 +55,7 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
 
   if (size_args.my_rank == owner)
     {
-      msg_place = ptr_columns[ind_bl / size_args.comm_size];
+      msg_place = ptr_columns[size_args.get_local_bl_ind (ind_bl)];
       msg_place += ind_bl_mult_block_size * size_args.get_col_width (ind_bl);
       msg_place += get_IND (ind - ind_bl_mult_block_size, ind - ind_bl_mult_block_size, size_args.get_col_width(ind_bl));
 
@@ -93,7 +93,7 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
 
       if (size_args.my_rank == owner)
         {
-          msg_place = ptr_columns[j_bl / size_args.comm_size];
+          msg_place = ptr_columns[size_args.get_local_bl_ind (j_bl)];
           msg_place += ind * count; // count = size_args.get_col_width (j_bl);
 
           switch(action)
@@ -132,7 +132,7 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
 void
 get_full_block (int i_bl, int s_bl, size_arguments &size_args, matr *ptr_columns, matr_bl R_bl)
 {
-  buff_ptr orig_R_bl = ptr_columns[s_bl / size_args.comm_size]
+  buff_ptr orig_R_bl = ptr_columns[size_args.get_local_bl_ind (s_bl)]
       + i_bl * size_args.get_col_width (s_bl) * size_args.block_size;
 
   if (s_bl != size_args.div)
@@ -157,7 +157,7 @@ void
 get_diag_block (int i_bl, size_arguments &size_args, matr *ptr_columns, matr_bl R_bl)
 {
   int col_width = size_args.get_col_width (i_bl);
-  buff_ptr orig_R_bl = ptr_columns[i_bl / size_args.comm_size]
+  buff_ptr orig_R_bl = ptr_columns[size_args.get_local_bl_ind (i_bl)]
       + i_bl * col_width * size_args.block_size;
 
   if (i_bl == size_args.div)
@@ -185,7 +185,7 @@ get_column (int j_bl, size_arguments &size_args, matr *ptr_columns, column_bl R_
 void
 put_full_block (int i_bl, int s_bl, size_arguments &size_args, matr *ptr_columns, matr_bl R_bl)
 {
-  buff_ptr orig_R_bl = ptr_columns[s_bl / size_args.comm_size]
+  buff_ptr orig_R_bl = ptr_columns[size_args.get_local_bl_ind (s_bl)]
       + i_bl * size_args.get_col_width (s_bl) * size_args.block_size;
 
   if (s_bl != size_args.div)
@@ -208,7 +208,7 @@ void
 put_diag_block (int ind_bl, size_arguments &size_args, matr *ptr_columns, matr_bl R_i)
 {
   int col_width = size_args.get_col_width (ind_bl);
-  buff_ptr orig_R_i = ptr_columns[ind_bl / size_args.comm_size]
+  buff_ptr orig_R_i = ptr_columns[size_args.get_local_bl_ind (ind_bl)]
       + ind_bl * col_width * size_args.block_size;
 
   for (int i = 0; i < col_width; i++)

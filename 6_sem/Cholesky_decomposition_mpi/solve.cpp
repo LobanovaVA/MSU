@@ -6,9 +6,8 @@
 #include "in_out.h"
 
 int
-MPI_solve (size_arguments &size_args, matr *ptr_columns, vect B, vect D)
+MPI_solve (size_arguments &size_args, matr *ptr_columns, vect D, vect B, vect Y)
 {
-  (void) B;
   int err = NO_ERROR;
   double norm;
 
@@ -23,11 +22,11 @@ MPI_solve (size_arguments &size_args, matr *ptr_columns, vect B, vect D)
   if (err != NO_ERROR)
     return err;
 
-  /* TODO
-   * calc_y
-   * DB
-   * calc_x
-   * memcpy (X, B, matrix_size * sizeof (double)); */
+  MPI_calc_y (size_args, ptr_columns, B, Y, diag_inv); // answer -> Y
+  DB (size_args.matrix_size, D, Y);
+  MPI_calc_x (size_args, ptr_columns, Y, B); // answer -> B
+  if (size_args.my_rank == MAIN_PROCESS)
+    memcpy (Y, B, size_args.matrix_size * sizeof (double));
 
   return err;
 }
@@ -207,20 +206,69 @@ calc_full_block_R (int i_bl, int s_bl, size_arguments &size_args,  matr *ptr_col
 }//TODO for last block other func without get/put block
 
 
-//void
-//calc_full_block_R (int matrix_size, int block_size, matr A, vect D,
-//                   matr_bl Ri_inv, vect_bl D_i, matr_bl R_is, column R_col,
-//                   matr_bl R_bl, vect_bl D_bl, int i, int s, int div, int mod)
-//{
-//  int j, shift = block_size * block_size;
-//  matr_bl R_ji = R_col;
+// ======================================= calculate solution ======================================= //
+void
+MPI_calc_y (size_arguments &size_args, matr *ptr_columns, vect B, vect Y, buff_ptr diag_inv)
+{
+  int col_width;
+  vect_bl B_i = B, Y_j, Y_i = Y;
+  matr_bl R_ji = nullptr, Ri_inv = diag_inv;
 
-//  for (j = 0 ; j < i; j++, R_ji += shift)
-//    {
-//      get_full_block (matrix_size, block_size, A, R_bl, j, s, div, mod);
-//      get_vect_block (block_size, D, D_bl, j, div, mod);
-//      A_minus_RtDR (block_size, R_is, R_ji, D_bl, R_bl);
-//    }
+  for (int i_bl = 0; i_bl < size_args.block_lim; i_bl++,
+       B_i += size_args.block_size, Y_i += size_args.block_size,
+       Ri_inv += size_args.squared_block_size)
+    {
+      col_width = size_args.get_col_width (i_bl);
+      if (size_args.is_my_column (i_bl))
+        {
+          Y_j = Y;
+          R_ji = ptr_columns [size_args.get_local_bl_ind (i_bl)];
 
-//  DRtA (block_size, D_i, Ri_inv, R_is);
-//}
+          for (int j_bl = 0; j_bl < i_bl; j_bl++,
+               Y_j += size_args.block_size,
+               R_ji += col_width * size_args.block_size)
+            B_minus_RtY (col_width, size_args.block_size, B_i, R_ji, Y_j);
+
+          RtB (col_width, Ri_inv, B_i, Y_i);
+        }
+
+      MPI_Bcast (Y_i, col_width, MPI_DOUBLE,
+                 size_args.get_column_owner (i_bl), MPI_COMM_WORLD);
+    }
+}
+
+
+void
+MPI_calc_x (size_arguments &size_args, matr *ptr_columns, vect B, vect X)
+{
+  double sum;
+  std::unique_ptr <double []> ptr_elem_row;
+  vect elem_row = nullptr;
+
+  if (size_args.my_rank == MAIN_PROCESS)
+    {
+      ptr_elem_row = std::make_unique <double []> (size_args.matrix_size);
+      elem_row = ptr_elem_row.get ();
+    }
+
+  for (int i = size_args.matrix_size - 1; i >= 0; i--)
+    {
+      MPI_action_elem_row (i, size_args, ptr_columns, elem_row, GATHER);
+
+      if (size_args.my_rank == MAIN_PROCESS)
+        {
+          sum = 0;
+          for (int j = i + 1; j < size_args.matrix_size; j++)
+            sum += elem_row[j] * X[j];
+
+          X[i] = (B[i] - sum) / elem_row[i];
+        }
+    }
+}
+
+void
+DB (int size, vect D, vect B)
+{
+  for (int i = 0; i < size; i++)
+    B[i] *= D[i];
+}

@@ -1,5 +1,6 @@
 #include "addition.h"
 #include "in_out.h"
+#include "norm.h"
 #include "solve.h"
 
 
@@ -11,11 +12,12 @@ main (int argc, char **argv)
   char *filename = 0;
   int mode, ret;
 
-  std::unique_ptr <double []> uptr_matrix, uptr_vect_B, uptr_vect_D;
+  std::unique_ptr <double []> uptr_matrix,
+      uptr_vect_D, uptr_vect_B, uptr_vect_Y;
   std::unique_ptr <double* []> uptr_columns;
 
   matr matrix, *ptr_columns;
-  vect vect_B, vect_D;
+  vect vect_D, vect_B, vect_Y;
 
   size_arguments size_args;
 
@@ -33,13 +35,15 @@ main (int argc, char **argv)
 
   // === memory allocation === //
   uptr_matrix = std::make_unique <double []> (size_args.get_alloc_size ());
-  uptr_vect_B = std::make_unique <double []> (size_args.matrix_size);
   uptr_vect_D = std::make_unique <double []> (size_args.matrix_size);
+  uptr_vect_B = std::make_unique <double []> (size_args.matrix_size);
+  uptr_vect_Y = std::make_unique <double []> (size_args.matrix_size);
   uptr_columns = std::make_unique <double* []> (size_args.get_local_block_lim ());
 
   matrix = uptr_matrix.get ();
-  vect_B = uptr_vect_B.get ();
   vect_D = uptr_vect_D.get ();
+  vect_B = uptr_vect_B.get ();
+  vect_Y = uptr_vect_Y.get ();
   ptr_columns = uptr_columns.get ();
 
   reorganize_matrix (size_args, matrix, ptr_columns);
@@ -72,7 +76,10 @@ main (int argc, char **argv)
 
 
   // === solve === //
-  ret = MPI_solve (size_args, ptr_columns, vect_B, vect_D);
+  double time_solve = clock ();
+  ret = MPI_solve (size_args, ptr_columns, vect_D, vect_B, vect_Y);
+  time_solve = (clock () - time_solve) / CLOCKS_PER_SEC;
+
   if (ret != NO_ERROR)
     {
       check_solve_errors (ret, argv[0]);
@@ -88,8 +95,25 @@ main (int argc, char **argv)
   MPI_print_matrix (size_args, ptr_columns, UPPER);
   printf_main_process ("\nVector D:\n");
   print_matrix(vect_D, size_args.matrix_size, 1, size_args.print_size, MAIN);
-  printf_main_process ("\nSLU comming soon...\n");
 
+
+  // === finally === //
+  printf_main_process ("\nVector X:\n");
+  print_matrix(vect_Y, size_args.matrix_size, 1, size_args.print_size, MAIN);
+
+  printf_main_process ("\n   Reinit matrix...\n\n");
+  if (argc == 6)
+    MPI_read_matrix (filename, size_args, ptr_columns);
+  else
+    init_matrix (mode, size_args, ptr_columns);
+  MPI_init_vector (size_args, ptr_columns, vect_B);
+
+  double residual = MPI_norm_Ax_b (size_args, ptr_columns, vect_B, vect_Y);
+
+  printf_main_process ("Time solve = %.4f\n", time_solve);
+
+  printf_main_process ("\n%s : residual = %e elapsed = %.2f for s = %d n = %d m = %d\n",
+          argv[0], residual, time_solve, mode, size_args.matrix_size, size_args.block_size);
 
   MPI_Finalize ();
   return 0;

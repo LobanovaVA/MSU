@@ -138,7 +138,6 @@ A_minus_RtDR (int size, matr A, const matr R1, const vect D, const matr R2)
 }
 
 
-
 void
 DRtA (int size, const vect D, const matr R, matr A) // R_ii
 {
@@ -160,9 +159,9 @@ DRtA (int size, const vect D, const matr R, matr A) // R_ii
 }
 
 
-
 int
 inverse_upper_matrix (int size, int shift, const matr R, matr E, double eps)
+// incomplete block put with size = col_width //
 {
 
   int i, j, k;
@@ -176,19 +175,49 @@ inverse_upper_matrix (int size, int shift, const matr R, matr E, double eps)
         return ERROR_EPS;
 
       r_ii = 1 / r_ii;
-      E[i * shift + i] = r_ii;
+      E[i * size + i] = r_ii;
 
       for (j = i + 1; j < size; j++)
         {
           sum = 0;
           for (k = i + 1; k <= j; k++)
             {
-              sum += R[i * shift + k] * E[k * shift + j];
+              sum += R[i * shift + k] * E[k * size + j];
             }
-          E[i * shift + j] = -sum * r_ii;
+          E[i * size + j] = -sum * r_ii;
         }
     }
 
   return NO_ERROR;
 }
 
+
+void
+B_minus_RtY (int k_size, int m_size, vect B, matr R, vect Y)
+{
+  // (k x m) * (m x 1) = (k x 1)
+  double sum;
+  for (int i = 0; i < k_size; i++)
+    {
+      sum = 0;
+      for (int j = 0; j < m_size; j++)
+        sum += R[j * k_size + i] * Y[j];
+
+      B[i] -= sum;
+    }
+}
+
+void
+RtB (int size, vect R, vect B, vect Y)
+{
+  double sum;
+
+  for (int i = 0; i < size; i++)
+    {
+      sum = 0;
+      for (int j = 0; j <= i; j++)
+        sum += R [j * size + i] * B[j];
+
+      Y[i] = sum;
+    }
+}

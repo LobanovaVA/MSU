@@ -8,5 +8,7 @@ void DRtA (int size, vect D, matr R, matr A);
 
 int inverse_upper_matrix (int size, int shift, matr R, matr E, double eps);
 
+void B_minus_RtY (int k_size, int m_size, vect B, matr R, vect Y);
+void RtB (int size, vect R, vect B, vect Y);
 #endif
 
