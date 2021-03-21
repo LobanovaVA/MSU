@@ -3,7 +3,7 @@
 
 #include "addition.h"
 
-int transform_symm_matrix (int size, matr A);
+int transform_symm_matrix (int size, matr A, double norm);
 
 int find_eigenvalues (int size, matr A, vect V, double eps);
 

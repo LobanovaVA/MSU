@@ -207,6 +207,7 @@ calc_full_block_R (int i_bl, int s_bl, size_arguments &size_args,  matr *ptr_col
 
 
 // ======================================= calculate solution ======================================= //
+#if 0 //old
 void
 MPI_calc_y (size_arguments &size_args, matr *ptr_columns, vect B, vect Y, buff_ptr diag_inv)
 {
@@ -234,6 +235,41 @@ MPI_calc_y (size_arguments &size_args, matr *ptr_columns, vect B, vect Y, buff_p
 
       MPI_Bcast (Y_i, col_width, MPI_DOUBLE,
                  size_args.get_column_owner (i_bl), MPI_COMM_WORLD);
+    }
+}
+#endif
+
+void
+MPI_calc_y (size_arguments &size_args, matr *ptr_columns, vect B, vect Y, buff_ptr diag_inv)
+{
+  int col_width;
+  vect_bl B_i = B, B_s, Y_i = Y;
+  matr_bl R_is = nullptr, Ri_inv = diag_inv;
+
+  for (int i_bl = 0; i_bl < size_args.block_lim; i_bl++,
+       B_i += size_args.block_size, Y_i += size_args.block_size,
+       Ri_inv += size_args.squared_block_size)
+    {
+      // === calc Y_i and send === //
+      col_width = size_args.get_col_width (i_bl);
+      if (size_args.is_my_column (i_bl))
+        RtB (col_width, Ri_inv, B_i, Y_i);
+
+      MPI_Bcast (Y_i, col_width, MPI_DOUBLE,
+                 size_args.get_column_owner (i_bl), MPI_COMM_WORLD);
+
+      // === use new Y_i for all sum components === //
+      int s_bl = size_args.get_start_ind (i_bl);
+      B_s = B + s_bl * size_args.block_size;
+
+      for (; s_bl < size_args.block_lim; s_bl += size_args.comm_size,
+           B_s += size_args.block_size * size_args.comm_size)
+           // comm_size is global shift in 1 proccess
+        {
+          R_is = ptr_columns [size_args.get_local_bl_ind (s_bl)];
+          R_is += i_bl * col_width * size_args.block_size;
+          B_minus_RtY (col_width, size_args.block_size, B_s, R_is, Y_i);
+        }
     }
 }
 

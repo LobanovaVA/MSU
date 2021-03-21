@@ -64,7 +64,7 @@ main (int argc, char *argv[])
   else
     init_matrix (mode, matrix_size, A);
 
-  printf ("\n\n===============  ORIGINAL  ==============\n");
+  printf ("\n\n============================  ORIGINAL  ===========================\n");
   printf ("\nOriginal matrix A:\n");
   print_symmetric_matrix(A, matrix_size, print_size);
 
@@ -76,11 +76,12 @@ main (int argc, char *argv[])
   printf ("\nOriginal invariants:\n  track  = %.3e\n  lenght = %.3e\n", track_orig, lenght_orig);
 
   double time_trans = clock ();
-  ret = transform_symm_matrix (matrix_size, A);
-  time_trans = clock () - time_trans;
+  double norm = norm_symm_matr (matrix_size, A);
+  ret = transform_symm_matrix (matrix_size, A, norm);
+  time_trans = (clock () - time_trans) / CLOCKS_PER_SEC;
 
-  printf ("=========================================\n");
-  printf ("\n\n=============  TRANSFORMED  =============\n");
+  printf ("===================================================================\n");
+  printf ("\n\n==========================  TRANSFORMED  ==========================\n");
   printf ("\nTransformed matrix A:\n");
   print_symmetric_matrix(A, matrix_size, print_size);
 
@@ -89,17 +90,17 @@ main (int argc, char *argv[])
   printf ("\nTransformed invariants:\n  track  = %.3e\n  lenght = %.3e\n", track_trans, lenght_trans);
 
   printf ("\nResidual invariants after transformation:\n  residual_track  = %.3e\n  residual_lenght = %.3e\n",
-          fabs (track_orig - track_trans), fabs (lenght_orig - lenght_trans));
+          fabs (track_orig - track_trans) / norm, fabs (lenght_orig - lenght_trans) / norm);
 
 
 
   /* ========== find eigenvalues ========== */
   double time_solve = clock ();
   ret = find_eigenvalues (matrix_size, A, V, eps);
-  time_solve = clock () - time_solve;
+  time_solve = (clock () - time_solve) / CLOCKS_PER_SEC;
 
-  printf ("=========================================\n");
-  printf ("\n\n===============  RESULTS  ===============\n");
+  printf ("===================================================================\n");
+  printf ("\n\n============================  RESULTS  ============================\n");
 
   if (ret < SUCCESS)
     {
@@ -118,7 +119,6 @@ main (int argc, char *argv[])
     }
 
 
-
   /* ========== finally ========== */
   printf ("\nEigenvalues:\n");
   print_matrix (V, 1, matrix_size, print_size);
@@ -128,19 +128,20 @@ main (int argc, char *argv[])
   printf ("\nResult invariants:\n  track  = %.3e\n  lenght = %.3e\n", track_res, lenght_res);
 
   printf ("\nResidual invariants after solve:\n  residual_track  = %.3e\n  residual_lenght = %.3e\n",
-          fabs (track_trans - track_res), fabs (lenght_trans - lenght_res));
+          fabs (track_trans - track_res) / norm, fabs (lenght_trans - lenght_res) / norm);
 
   printf ("\nResidual invariants after\n transformation + solve:\n  residual_track  = %.3e\n  residual_lenght = %.3e\n",
-          fabs (track_orig - track_res), fabs (lenght_orig - lenght_res));
+          fabs (track_orig - track_res) / norm, fabs (lenght_orig - lenght_res) / norm);
 
   printf ("\nTransformation time = %.2f\nSolve time = %.2f\n",
           time_trans / CLOCKS_PER_SEC, time_solve / CLOCKS_PER_SEC);
 
   printf ("\nIterations = %d\n", ret);
-  printf ("=========================================\n");
+  printf ("===================================================================\n\n");
 
-  printf ("\n%s : matrix_size = %d print_size = %d eps = %.3e mode = %d \n",
-          argv[0], matrix_size, print_size, eps, mode);
+  printf ("%s : Residual1 = %e Residual2 = %e Iterations = %d Iterations1 = %d Elapsed1 = %.2f Elapsed2 = %.2f\n",
+          argv[0], fabs (track_orig - track_res) / norm, fabs (lenght_orig - lenght_res) / norm,
+          ret, ret / matrix_size, time_trans, time_solve);
 
   return SUCCESS;
 }

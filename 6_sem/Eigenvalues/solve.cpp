@@ -13,11 +13,10 @@ find_eigenvalues (int size, matr A, vect V, double eps)
   printf("\nMatrix norm = %.3e\n", norm);
   eps_lim = norm * eps;
 
-  for (dim = size, ind = size - 1; dim > 2; dim--, ind--)
+  for (dim = size, ind = size - 1; dim > 2 /*&& iter < 3 * size*/; dim--, ind--)
     {
       while (fabs (A[get_IND (ind, ind - 1, size)]) > eps_lim)
         {
-          //(void) shift_v;
 #ifdef SHIFT
           double shift_v = A[get_IND (ind, ind - 1, size)];
           make_shift (size, A, dim, shift_v);
@@ -33,6 +32,7 @@ find_eigenvalues (int size, matr A, vect V, double eps)
 #endif
           iter++;
         }
+
     }
 
   if (size > 1)
@@ -131,14 +131,13 @@ make_shift (int size, matr A, int dim, double shift_v)
 
 /* ============ matrix transformation ============ */
 int
-transform_symm_matrix (int size, matr A)
+transform_symm_matrix (int size, matr A, double norm)
 {
   int h, s, c;
-  double norm, eps, vect_len_sqauared = 0, vect_len, next_elem;
+  double eps, vect_len_sqauared = 0, vect_len;
   double cos_v, sin_v, x_i, x_j, b_ii, b_ij, b_ji, b_jj;
   double *ptr_A_hh;
 
-  norm = norm_symm_matr (size, A);
   printf("\nMatrix norm = %.3e\n", norm);
   eps = (1 < norm ? 1 : norm) * EPS;
 
@@ -152,17 +151,8 @@ transform_symm_matrix (int size, matr A)
       /* transform A_{h + 2, step}..A_{size - 1, s} */
       for (s = 2; s < size - h; s++)
         {
-          next_elem = ptr_A_hh[s];
-          if (fabs (next_elem) < norm * EPS)
-            {
-              ptr_A_hh[s] = 0;
-              continue;
-            }
-
-          next_elem *= next_elem;
-          vect_len_sqauared += next_elem;
+          vect_len_sqauared += ptr_A_hh[s] * ptr_A_hh[s];
           vect_len = sqrt (vect_len_sqauared);
-
           if (vect_len < eps)
             {
               ptr_A_hh[s] = 0;
