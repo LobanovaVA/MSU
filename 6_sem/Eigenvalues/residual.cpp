@@ -2,7 +2,7 @@
 
 /* ============ invariants ============ */
 void
-cacl_inv_symm_matr (int size, matr A, double &track, double &lenght)
+cacl_inv_symm_matr (int size, matr A, double &track, double &lenght, double norm)
 {
   int i, j;
   double A_ii;
@@ -18,10 +18,13 @@ cacl_inv_symm_matr (int size, matr A, double &track, double &lenght)
       for (j = i + 1; j < size; j++)
         lenght += 2 * A[get_IND (i, j, size)] * A[get_IND (i, j, size)];
     }
+
+  track /= norm;
+  lenght /= norm * norm;
 }
 
 void
-cacl_inv_tridiag_matr (int size, matr A, double &track, double &lenght)
+cacl_inv_tridiag_matr (int size, matr A, double &track, double &lenght, double norm)
 {
   int i;
   double A_ii;
@@ -37,10 +40,13 @@ cacl_inv_tridiag_matr (int size, matr A, double &track, double &lenght)
       if (i + 1 < size)
         lenght += 2 * A[get_IND (i, i + 1, size)] * A[get_IND (i, i + 1, size)];
     }
+
+  track /= norm;
+  lenght /= norm * norm;
 }
 
 void
-cacl_inv_diag_matr (int size, vect V, double &track, double &lenght)
+cacl_inv_diag_matr (int size, vect V, double &track, double &lenght, double norm)
 {
   int i;
   double elem;
@@ -53,6 +59,9 @@ cacl_inv_diag_matr (int size, vect V, double &track, double &lenght)
       track += elem;
       lenght += elem * elem;
     }
+
+  track /= norm;
+  lenght /= norm * norm;
 }
 
 

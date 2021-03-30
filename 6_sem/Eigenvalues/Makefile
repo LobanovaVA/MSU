@@ -5,7 +5,7 @@ DEBUG = -g #$(GPROF)
 CC = g++ -c
 LD = g++
 
-CFLAGS	= $(DEBUG) -W -Wall -Wextra -pedantic -Werror -O3 #-DSHIFT
+CFLAGS	= $(DEBUG) -W -Wall -Wextra -pedantic -Werror -O3 #-DFULLPRINT
 LDFLAGS = $(DEBUG)
 
 

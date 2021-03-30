@@ -5,7 +5,7 @@
 
 int transform_symm_matrix (int size, matr A, double norm);
 
-int find_eigenvalues (int size, matr A, vect V, double eps);
+int find_eigenvalues (int size, int fl, matr A, vect V, double eps, double norm);
 
 int cholesky_decomp_tridiag_matr (int size, matr A, int dim, double norm);
 void cacl_product (int size, matr A, int dim);

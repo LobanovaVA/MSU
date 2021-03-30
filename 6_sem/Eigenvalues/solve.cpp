@@ -1,38 +1,29 @@
 #include "solve.h"
 #include "residual.h"
 
-#include "in_out.h"
-
 int
-find_eigenvalues (int size, matr A, vect V, double eps)
+find_eigenvalues (int size, int mode, matr A, vect V, double eps, double norm)
 {
   int iter = 0, ind, dim, ret;
-  double norm, eps_lim;
+  double shift_v, eps_lim = norm * eps;
 
-  norm = norm_tridiag_matr (size, A);
-  printf("\nMatrix norm = %.3e\n", norm);
-  eps_lim = norm * eps;
-
-  for (dim = size, ind = size - 1; dim > 2 /*&& iter < 3 * size*/; dim--, ind--)
+  for (dim = size, ind = size - 1; dim > 2; dim--, ind--)
     {
-      while (fabs (A[get_IND (ind, ind - 1, size)]) > eps_lim)
+      while (fabs (A[get_IND (ind - 1, ind, size)]) > eps_lim)
         {
-#ifdef SHIFT
-          double shift_v = A[get_IND (ind, ind - 1, size)];
+          shift_v = 0;
+          if (mode == 1)
+            shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind - 1, size)] * A[get_IND (ind - 1, ind - 1, size)];
           make_shift (size, A, dim, shift_v);
-#endif
 
           ret = cholesky_decomp_tridiag_matr (size, A, dim, norm);
           if (ret != SUCCESS)
             return ret;
           cacl_product (size, A, dim);
 
-#ifdef SHIFT
           make_shift (size, A, dim, -shift_v);
-#endif
           iter++;
         }
-
     }
 
   if (size > 1)
@@ -134,12 +125,11 @@ int
 transform_symm_matrix (int size, matr A, double norm)
 {
   int h, s, c;
-  double eps, vect_len_sqauared = 0, vect_len;
+  double vect_len_sqauared = 0, vect_len;
   double cos_v, sin_v, x_i, x_j, b_ii, b_ij, b_ji, b_jj;
   double *ptr_A_hh;
 
-  printf("\nMatrix norm = %.3e\n", norm);
-  eps = (1 < norm ? 1 : norm) * EPS;
+  double eps = (1 < norm ? 1 : norm) * EPS;
 
   for (h = 0; h < size - 2; h++)
     {

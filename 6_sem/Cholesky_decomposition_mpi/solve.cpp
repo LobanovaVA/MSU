@@ -302,6 +302,7 @@ MPI_calc_x (size_arguments &size_args, matr *ptr_columns, vect B, vect X)
     }
 }
 
+
 void
 DB (int size, vect D, vect B)
 {

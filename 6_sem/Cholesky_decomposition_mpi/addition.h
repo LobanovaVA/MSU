@@ -28,6 +28,10 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <memory>
+#include <string.h>
+#include <iostream>
+#include <unistd.h>
+#include <sched.h>
 
 #include "mpi.h"
 
