@@ -2,7 +2,7 @@
 #include "residual.h"
 
 int
-find_eigenvalues (int size, int mode, matr A, vect V, double eps, double norm)
+find_eigenvalues (int size, matr A, vect V, double eps, double norm)
 {
   int iter = 0, ind, dim, ret;
   double shift_v, eps_lim = norm * eps;
@@ -11,18 +11,54 @@ find_eigenvalues (int size, int mode, matr A, vect V, double eps, double norm)
     {
       while (fabs (A[get_IND (ind - 1, ind, size)]) > eps_lim)
         {
+#ifdef WW
           shift_v = 0;
-          if (mode == 1)
-            shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind - 1, size)] * A[get_IND (ind - 1, ind - 1, size)];
+//          if (mode == 1)
+//            shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind - 1, size)] * A[get_IND (ind - 1, ind - 1, size)];
+          (void) mode;
+          //shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind - 1, size)] / 2;
+//          shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind, size)] / 2;
+//          shift_v /= 4;
+          //shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind - 1, size)] * A[get_IND (ind - 1, ind - 1, size)];
+
+          shift_v = A[get_IND (ind, ind, size)] * 0.99;
           make_shift (size, A, dim, shift_v);
 
-          ret = cholesky_decomp_tridiag_matr (size, A, dim, norm);
+          ret = cholesky_decomp_tridiag_matr (A, dim, norm, size);
           if (ret != SUCCESS)
             return ret;
-          cacl_product (size, A, dim);
+          cacl_product (A, dim, size);
 
           make_shift (size, A, dim, -shift_v);
           iter++;
+#else
+
+
+          shift_v = A[get_IND (ind, ind, size)] * 0.99;
+          make_shift (size, A, dim, shift_v, V);
+
+          ret = cholesky_decomp_tridiag_matr (V, dim, norm);
+          if (ret != SUCCESS)
+            {
+              shift_v = 0;
+              make_shift (size, A, dim, shift_v, V);
+              ret = cholesky_decomp_tridiag_matr (V, dim, norm);
+              if (ret != SUCCESS)
+                {
+                  shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind - 1, size)] * A[get_IND (ind - 1, ind - 1, size)];
+                  make_shift (size, A, dim, shift_v, V);
+                  ret = cholesky_decomp_tridiag_matr (V, dim, norm);
+                  if (ret != SUCCESS)
+                    return ret;
+                }
+            }
+
+          cacl_product (V, dim);
+
+          make_shift (size, A, dim, shift_v, V, SUCCESS);
+          iter++;
+
+#endif
         }
     }
 
@@ -37,7 +73,7 @@ find_eigenvalues (int size, int mode, matr A, vect V, double eps, double norm)
 
 
 int
-cholesky_decomp_tridiag_matr (int size, matr A, int dim, double norm)
+cholesky_decomp_tridiag_matr (matr A, int dim, double norm, int size)
 {
   int i;
   double l_ii, elem;
@@ -67,9 +103,40 @@ cholesky_decomp_tridiag_matr (int size, matr A, int dim, double norm)
   return SUCCESS;
 }
 
+int
+cholesky_decomp_tridiag_matr (matr V, int dim, double norm)
+{
+  int i;
+  double l_ii, elem;
+
+  for (i = 0; i < dim; i++)
+    {
+      elem = (i > 0) ?  V[i + i - 1] : 0;
+      elem *= elem;
+      l_ii = V[i + i] - elem;
+
+      if (is_small (l_ii, norm * EPS))
+        return ERROR_SINGULAR_MATRIX;
+
+      if (l_ii < 0)
+        {
+          //printf ("\nERROR: L_{%d, %d} = %.3e\n", i, i, l_ii);
+          return ERROR_NEGATIVE_MATRIX;
+        }
+
+      l_ii = sqrt (l_ii);
+      V[i + i] = l_ii;
+
+      if (i < dim - 1)
+        V[i + i + 1] /= l_ii;
+    }
+
+  return SUCCESS;
+}
+
 
 void
-cacl_product (int size, matr A, int dim)
+cacl_product (matr A, int dim, int size)
 {
   int i = 0;
   double elem, l_ii = A[0];
@@ -88,6 +155,28 @@ cacl_product (int size, matr A, int dim)
     }
 
   A[get_IND (dim - 1, dim - 1, size)] = l_ii * l_ii;
+}
+
+void
+cacl_product (matr V, int dim)
+{
+  int i = 0;
+  double elem, l_ii = V[0];
+
+  while (i < dim - 1)
+    {
+      /* A_{i,i} = L_{i,i}^2 + L_{i+1,i+1}^2
+       * A_{i,i+1} = L_{i,i+1} * L_{i+1,i+1} */
+
+      elem = V[i + i + 1];
+      V[i + i] = l_ii * l_ii + elem * elem;
+
+      i++;
+      l_ii = V[i + i];
+      V[i + i - 1] = elem * l_ii;
+    }
+
+  V[dim - 1 + dim - 1] = l_ii * l_ii;
 }
 
 
@@ -118,6 +207,28 @@ make_shift (int size, matr A, int dim, double shift_v)
     A[get_IND (i, i, size)] -= shift_v;
 }
 
+void
+make_shift (int size, matr A, int dim, double shift_v, vect V, int fl)
+{
+  if (fl)
+    {
+      V[0] = A[0] - shift_v;
+      for (int i = 1; i < dim; i++)
+        {
+          V[i + i - 1] = A[get_IND (i - 1, i, size)];
+          V[i + i] = A[get_IND (i, i, size)] - shift_v;
+        }
+    }
+  else
+    {
+      A[0] = V[0] + shift_v;
+      for (int i = 1; i < dim; i++)
+        {
+          A[get_IND (i - 1, i, size)] = V[i + i - 1];
+          A[get_IND (i, i, size)]  = V[i + i] + shift_v;
+        }
+    }
+}
 
 
 /* ============ matrix transformation ============ */

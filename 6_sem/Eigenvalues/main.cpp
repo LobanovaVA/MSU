@@ -10,7 +10,7 @@ main (int argc, char *argv[])
   int matrix_size, print_size, mode, ret;
   double eps;
 
-  ptr_matr ptr_A, ptr_V;
+  ptr_matr ptr_A, ptr_L, ptr_V;
   matr A, V;
 
 
@@ -34,7 +34,7 @@ main (int argc, char *argv[])
 
   /* === memory allocation & initialization === */
   ptr_A = std::make_unique <double []> (((matrix_size + 1) * matrix_size) / 2);
-  ptr_V = std::make_unique <double []> (matrix_size);
+  ptr_V = std::make_unique <double []> (2 * matrix_size + 1);
   A = ptr_A.get ();
   V = ptr_V.get ();
 
@@ -71,6 +71,7 @@ main (int argc, char *argv[])
   printf("\nMatrix norm = %.3e\n", norm);
 
 
+
   /* ========== transformation matrix ========== */
   double track_orig, lenght_orig;
   cacl_inv_symm_matr (matrix_size, A, track_orig, lenght_orig, norm);
@@ -101,7 +102,7 @@ main (int argc, char *argv[])
 
   /* ========== find eigenvalues ========== */
   double time_solve = clock ();
-  ret = find_eigenvalues (matrix_size, mode, A, V, eps, norm);
+  ret = find_eigenvalues (matrix_size, A, V, eps, norm);
   time_solve = (clock () - time_solve) / CLOCKS_PER_SEC;
 
   printf ("\n===================================================================\n");
