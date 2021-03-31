@@ -11,29 +11,6 @@ find_eigenvalues (int size, matr A, vect V, double eps, double norm)
     {
       while (fabs (A[get_IND (ind - 1, ind, size)]) > eps_lim)
         {
-#ifdef WW
-          shift_v = 0;
-//          if (mode == 1)
-//            shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind - 1, size)] * A[get_IND (ind - 1, ind - 1, size)];
-          (void) mode;
-          //shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind - 1, size)] / 2;
-//          shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind, size)] / 2;
-//          shift_v /= 4;
-          //shift_v = A[get_IND (ind, ind, size)] - A[get_IND (ind - 1, ind - 1, size)] * A[get_IND (ind - 1, ind - 1, size)];
-
-          shift_v = A[get_IND (ind, ind, size)] * 0.99;
-          make_shift (size, A, dim, shift_v);
-
-          ret = cholesky_decomp_tridiag_matr (A, dim, norm, size);
-          if (ret != SUCCESS)
-            return ret;
-          cacl_product (A, dim, size);
-
-          make_shift (size, A, dim, -shift_v);
-          iter++;
-#else
-
-
           shift_v = A[get_IND (ind, ind, size)] * 0.99;
           make_shift (size, A, dim, shift_v, V);
 
@@ -54,11 +31,8 @@ find_eigenvalues (int size, matr A, vect V, double eps, double norm)
             }
 
           cacl_product (V, dim);
-
           make_shift (size, A, dim, shift_v, V, SUCCESS);
           iter++;
-
-#endif
         }
     }
 
