@@ -49,7 +49,7 @@ then
 	then echo "-----------------BIG TESTS - ONLY RESIDUAL AND ERROR-----------------"
 	fi
 
-	if [ $fl -gt 2 ] && [ $fl -gt 2 ]
+	if [ $fl -gt 2 ] && [ $fl -lt 0 ]
 	then 
 		fl=-1
 		echo "Incorrect arg"
@@ -69,18 +69,15 @@ then
 	do \
 		data_file="${dir}/${data}"
 		echo "====================== ${data_file} ======================"
-		result=`./a.out 4 ${const_param} 0 ${data_file} | tr -d '\0'`\
-		
+		result=`./a.out 4 ${const_param} 0 ${data_file} | tr -d '\0'`
 		parse $fl "${result}"
-		
 	done
 
 	for data in ${data_s6}
 	do \
 		data_file="${dir}/${data}"
 		echo "====================== ${data_file} ======================"
-		result=`./a.out 6 ${const_param} 0 ${data_file} | tr -d '\0'`\
-		
+		result=`./a.out 6 ${const_param} 0 ${data_file} | tr -d '\0'`
 		parse $fl "${result}"
 	done
 
@@ -90,8 +87,7 @@ then
 		for (( n = 1; n <= 30; n++ ))
 		do \
 			echo "======================== n = ${n} s = ${s} ======================== "
-			result=`./a.out ${n} ${const_param} ${s}| tr -d '\0'`\
-			
+			result=`./a.out ${n} ${const_param} ${s}| tr -d '\0'`
 			parse $fl "${result}"
 		done
 	done
@@ -106,8 +102,7 @@ then
 			if [ $n -ne 3000 ]
 			then 
 				echo "======================== n = ${n} s = ${s} ======================== "
-				result=`./a.out ${n} ${const_param} ${s}| tr -d '\0'`\
-				
+				result=`./a.out ${n} ${const_param} ${s}| tr -d '\0'`
 				parse $fl "${result}"
 			fi
 		done

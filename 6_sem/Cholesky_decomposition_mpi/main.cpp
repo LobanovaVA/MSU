@@ -90,14 +90,10 @@ main (int argc, char **argv)
     }
 
 
-  // === TMP action === //
+  // === finally === //
   printf_main_process ("\nMatrix R:\n");
   MPI_print_matrix (size_args, ptr_columns, UPPER);
-  printf_main_process ("\nVector D:\n");
-  print_matrix(vect_D, size_args.matrix_size, 1, size_args.print_size, MAIN);
 
-
-  // === finally === //
   printf_main_process ("\nVector X:\n");
   print_matrix(vect_Y, size_args.matrix_size, 1, size_args.print_size, MAIN);
 
@@ -109,8 +105,6 @@ main (int argc, char **argv)
   MPI_init_vector (size_args, ptr_columns, vect_B);
 
   double residual = MPI_norm_Ax_b (size_args, ptr_columns, vect_B, vect_Y);
-
-  printf_main_process ("Time solve = %.4f\n", time_solve);
 
   printf_main_process ("\n%s : residual = %e elapsed = %.2f for s = %d n = %d m = %d\n",
           argv[0], residual, time_solve, mode, size_args.matrix_size, size_args.block_size);

@@ -165,7 +165,7 @@ MPI_print_matrix (size_arguments &size_args, matr *ptr_columns, matrix_type matr
 {
   std::unique_ptr <double []> ptr_printed_row;
   vect printed_row = nullptr;
-  int start_print;
+  int start_print = 0;
 
   if (size_args.my_rank == MAIN_PROCESS)
     {
