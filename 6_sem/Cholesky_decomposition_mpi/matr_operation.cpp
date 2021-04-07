@@ -2,7 +2,7 @@
 
 
 void
-A_minus_RtDR (int size, matr A, const matr R1, const vect D, const matr R2)
+A_minus_RtDR (int lim, int size, matr A, const matr R1, const vect D, const matr R2)
 {
   int i, j, k;
   double sum[9];
@@ -11,10 +11,10 @@ A_minus_RtDR (int size, matr A, const matr R1, const vect D, const matr R2)
   double R2_k_j, R2_k_j_1, R2_k_j_2;
   matr pA_i_j, pR1_k_i, pR2_k_j;
 
-  for (i = 0; i < size - 2; i += 3)
+  for (i = 0; i < lim - 2; i += 3)
     {
       pA_i_j = &A[i * size];
-      for (j = 0; j < size - 2; j += 3, pA_i_j += 3)
+      for (j = 0; j < lim - 2; j += 3, pA_i_j += 3)
         {
           for (k = 0; k < 9; k++)
             sum[k] = 0;
@@ -63,7 +63,7 @@ A_minus_RtDR (int size, matr A, const matr R1, const vect D, const matr R2)
           pA_i_j[2 * size + 2] -= sum[8];
         }
 
-      for (; j < size; j++)
+      for (; j < lim; j++)
         {
           for (k = 0; k < 9; k++)
             sum[k] = 0;
@@ -92,9 +92,9 @@ A_minus_RtDR (int size, matr A, const matr R1, const vect D, const matr R2)
         }
     }
 
-  for (; i < size; i++)
+  for (; i < lim; i++)
     {
-      for (j = 0; j < size - 2; j += 3)
+      for (j = 0; j < lim - 2; j += 3)
         {
           for (k = 0; k < 9; k++)
             sum[k] = 0;
@@ -122,7 +122,7 @@ A_minus_RtDR (int size, matr A, const matr R1, const vect D, const matr R2)
           pA_i_j[2] -= sum[2];
         }
 
-      for (; j < size; j++)
+      for (; j < lim; j++)
         {
 
           sum[0] = 0;

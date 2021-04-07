@@ -171,16 +171,18 @@ calc_diag_block_R (int ind_bl, size_arguments &size_args, vect D, column_bl R_co
 {
   vect_bl D_j = D;
   matr_bl R_ji = R_col;
-  matr_bl R_i = R_col + ind_bl * size_args.squared_block_size;
+  matr_bl orig_R_i = R_col + ind_bl * size_args.squared_block_size;
+
+  int col_width = size_args.get_col_width(ind_bl);
 
   for (int j_bl = 0 ; j_bl < ind_bl; j_bl++)
     {
-      A_minus_RtDR (size_args.block_size, R_i, R_ji, D_j, R_ji);
+      A_minus_RtDR (col_width, size_args.block_size, orig_R_i, R_ji, D_j, R_ji);
       R_ji += size_args.squared_block_size;
       D_j += size_args.block_size;
     }
 
-  return cholesky (size_args.get_col_width (ind_bl), size_args.block_size, R_i, D_j, eps);
+  return cholesky (col_width , size_args.block_size, orig_R_i, D_j, eps);;
 }
 
 
@@ -196,7 +198,7 @@ calc_full_block_R (int i_bl, int s_bl, size_arguments &size_args,  matr *ptr_col
   for (int j_bl = 0 ; j_bl < i_bl; j_bl++)
     {
       get_full_block (j_bl, s_bl, size_args, ptr_columns, R_js);
-      A_minus_RtDR (size_args.block_size, R_is, R_ji, D_j, R_js);
+      A_minus_RtDR (size_args.block_size, size_args.block_size, R_is, R_ji, D_j, R_js);
       R_ji += size_args.squared_block_size;
       D_j += size_args.block_size;
     }

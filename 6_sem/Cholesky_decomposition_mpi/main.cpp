@@ -91,13 +91,14 @@ main (int argc, char **argv)
 
 
   // === finally === //
+#if 0
   printf_main_process ("\nMatrix R:\n");
   MPI_print_matrix (size_args, ptr_columns, UPPER);
-
+#endif
   printf_main_process ("\nVector X:\n");
   print_matrix(vect_Y, size_args.matrix_size, 1, size_args.print_size, MAIN);
 
-  printf_main_process ("\n   Reinit matrix...\n\n");
+  printf_main_process ("\n   Reinit matrix...\n");
   if (argc == 6)
     MPI_read_matrix (filename, size_args, ptr_columns);
   else
