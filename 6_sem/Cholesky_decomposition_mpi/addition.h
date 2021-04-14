@@ -10,8 +10,6 @@
 #define ERR_USAGE_ARGC 2
 #define ERR_ALLOCATE_MEMORY 3
 #define ERR_DATA_INIT 4
-#define ERR_PTHREAD_BARRIER_INIT 5
-#define ERR_PTHREAD_CREATE 6
 
 #define ERROR_CANNOT_OPEN_INPUT_FILE -11
 #define ERROR_CANNOT_READ_INPUT_FILE -12
@@ -19,6 +17,7 @@
 #define ERROR_NOT_ENOUGH_MEMMORY -21
 #define ERROR_SINGULAR_MATRIX_R -72
 
+#include "mpi.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,8 +31,6 @@
 #include <iostream>
 #include <unistd.h>
 #include <sched.h>
-
-#include "mpi.h"
 
 #include "size_arguments.h"
 

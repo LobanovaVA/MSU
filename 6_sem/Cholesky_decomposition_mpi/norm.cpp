@@ -2,17 +2,9 @@
 #include "block_action.h"
 
 double
-MPI_norm_A (size_arguments &size_args, matr *ptr_columns)
+MPI_norm_A (size_arguments &size_args, matr *ptr_columns, buff_ptr elem_row)
 {
   double norm = 0, sum;
-  std::unique_ptr <double []> ptr_elem_row;
-  vect elem_row = nullptr;
-
-  if (size_args.my_rank == MAIN_PROCESS)
-    {
-      ptr_elem_row = std::make_unique <double []> (size_args.matrix_size);
-      elem_row = ptr_elem_row.get ();
-    }
 
   for (int i = 0; i < size_args.matrix_size; i++)
     {
@@ -34,17 +26,9 @@ MPI_norm_A (size_arguments &size_args, matr *ptr_columns)
 }
 
 double
-MPI_norm_Ax_b (size_arguments &size_args, matr *ptr_columns, vect B, vect X)
+MPI_norm_Ax_b (size_arguments &size_args, matr *ptr_columns, vect B, vect X, buff_ptr elem_row)
 {
   double norm, norm_B = 0, norm_Ax_B = 0, sum, elem_B;
-  std::unique_ptr <double []> ptr_elem_row;
-  vect elem_row = nullptr;
-
-  if (size_args.my_rank == MAIN_PROCESS)
-    {
-      ptr_elem_row = std::make_unique <double []> (size_args.matrix_size);
-      elem_row = ptr_elem_row.get ();
-    }
 
   for (int i = 0; i < size_args.matrix_size; i++)
     {

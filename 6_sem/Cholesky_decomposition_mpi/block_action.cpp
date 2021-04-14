@@ -1,6 +1,7 @@
 #include "block_action.h"
 
 #include "in_out.h"
+#if 0
 void
 MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect buff_row, action_type action)
 {
@@ -126,6 +127,125 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
           }
     }
 }
+#endif
+
+
+void
+MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect buff_row, action_type action)
+{
+  buff_ptr msg_place;
+
+  int count, owner;
+  int ind_bl = ind / size_args.block_size;
+  int ind_bl_mult_block_size = ind_bl * size_args.block_size;
+
+  if (action == GATHER)
+    {
+      owner = size_args.get_column_owner (ind_bl);
+      if (size_args.my_rank == owner)
+        {
+          // === elements before diagonal === //
+          msg_place = ptr_columns[size_args.get_local_bl_ind (ind_bl)];
+          msg_place += ind % size_args.block_size;
+
+          for (int j = 0; j < ind_bl_mult_block_size; j++)
+            {
+              buff_row [j] = *msg_place;
+              msg_place += size_args.get_col_width (ind_bl);
+            }
+
+          // === 1-st part elements of the diagonal block === //
+          msg_place = ptr_columns[size_args.get_local_bl_ind (ind_bl)];
+          msg_place += ind_bl_mult_block_size * size_args.get_col_width (ind_bl);
+
+          for (int j = ind_bl_mult_block_size; j < ind; j++)
+            {
+              int shift = get_IND (j - ind_bl_mult_block_size, ind - ind_bl_mult_block_size, size_args.get_col_width(ind_bl));
+              buff_row [j] = msg_place[shift];
+            }
+        }
+      MPI_Bcast (buff_row, ind + 1, MPI_DOUBLE, owner, MPI_COMM_WORLD);
+    }
+
+
+  // === 2-nd part elements of the diagonal block === //
+  owner = size_args.get_column_owner (ind_bl);
+  count = ind_bl_mult_block_size + size_args.get_col_width (ind_bl) - ind;
+
+  if (size_args.my_rank == owner)
+    {
+      msg_place = ptr_columns[size_args.get_local_bl_ind (ind_bl)];
+      msg_place += ind_bl_mult_block_size * size_args.get_col_width (ind_bl);
+      msg_place += get_IND (ind - ind_bl_mult_block_size, ind - ind_bl_mult_block_size, size_args.get_col_width(ind_bl));
+
+      switch(action)
+        {
+        case SCATTER:
+          if (owner == MAIN_PROCESS)
+            memcpy (msg_place, buff_row + ind, count * sizeof (double));
+          else
+            MPI_Recv (msg_place, count, MPI_DOUBLE, MAIN_PROCESS, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+          break;
+        case GATHER:
+          if (owner == MAIN_PROCESS)
+            memcpy (buff_row + ind, msg_place, count * sizeof (double));
+          else
+            MPI_Send (msg_place, count, MPI_DOUBLE, MAIN_PROCESS, TAG, MPI_COMM_WORLD);
+          break;
+        }
+    }
+  else if (size_args.my_rank == MAIN_PROCESS)
+    switch(action)
+      {
+      case SCATTER:
+        MPI_Send (buff_row + ind, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD);  break;
+      case GATHER:
+        MPI_Recv (buff_row + ind, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE); break;
+      }
+
+
+  // === elements after diagonal === //
+  for (int j_bl = ind_bl + 1; j_bl < size_args.block_lim; j_bl++)
+    {
+      owner = size_args.get_column_owner (j_bl);
+      count = size_args.get_col_width (j_bl);
+
+      if (size_args.my_rank == owner)
+        {
+          msg_place = ptr_columns[size_args.get_local_bl_ind (j_bl)];
+          msg_place += ind * count; // count = size_args.get_col_width (j_bl);
+
+          switch(action)
+            {
+            case SCATTER:
+              if (owner == MAIN_PROCESS)
+                memcpy (msg_place, buff_row + j_bl * size_args.block_size, count * sizeof (double));
+              else
+                MPI_Recv (msg_place, count, MPI_DOUBLE, MAIN_PROCESS, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+              break;
+
+            case GATHER:
+              if (owner == MAIN_PROCESS)
+                memcpy (buff_row + j_bl * size_args.block_size, msg_place, count * sizeof (double));
+              else
+                MPI_Send (msg_place, count, MPI_DOUBLE, MAIN_PROCESS, TAG, MPI_COMM_WORLD);
+              break;
+            }
+        }
+      else if (size_args.my_rank == MAIN_PROCESS)
+        switch(action)
+          {
+          case SCATTER:
+            MPI_Send (buff_row + + j_bl * size_args.block_size, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD);
+            break;
+
+          case GATHER:
+            MPI_Recv (buff_row + + j_bl * size_args.block_size, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            break;
+          }
+    }
+}
+
 
 
 // =========================================== get action =========================================== //

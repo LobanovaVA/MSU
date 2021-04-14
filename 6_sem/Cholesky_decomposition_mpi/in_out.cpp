@@ -40,7 +40,7 @@ f (int s, int n, int i, int j)
       ans = 1.0 / (i + j - 1);
       break;
     default:
-      printf ("Unknown parameter %d for f\n", s);
+      printf_main_process ("Unknown parameter %d for f\n", s);
     }
   return ans;
 }
@@ -75,17 +75,9 @@ init_matrix (const int mode, size_arguments &size_args, matr *ptr_columns)
     }
 }
 
-void MPI_init_vector (size_arguments &size_args, matr *ptr_columns, vect B)
+void MPI_init_vector (size_arguments &size_args, matr *ptr_columns, vect B, buff_ptr elem_row)
 {
   double sum;
-  std::unique_ptr <double []> ptr_elem_row;
-  vect elem_row = nullptr;
-
-  if (size_args.my_rank == MAIN_PROCESS)
-    {
-      ptr_elem_row = std::make_unique <double []> (size_args.matrix_size);
-      elem_row = ptr_elem_row.get ();
-    }
 
   for (int i = 0; i < size_args.matrix_size; i++)
     {
@@ -120,7 +112,7 @@ int read_array (FILE *fp, vect read_row, int size)
 }
 
 int
-MPI_read_matrix (const char *filename, size_arguments &size_args, matr *ptr_columns)
+MPI_read_matrix (const char *filename, size_arguments &size_args, matr *ptr_columns, buff_ptr read_row)
 {
   FILE *fp = nullptr;
   int err = NO_ERROR;
@@ -135,15 +127,6 @@ MPI_read_matrix (const char *filename, size_arguments &size_args, matr *ptr_colu
   MPI_Bcast (&err, 1, MPI_INT, MAIN_PROCESS, MPI_COMM_WORLD);
   if (err != NO_ERROR)
     return err;
-
-  std::unique_ptr <double []> ptr_read_row;
-  vect read_row = nullptr;
-
-  if (size_args.my_rank == MAIN_PROCESS)
-    {
-      ptr_read_row = std::make_unique <double []> (size_args.matrix_size);
-      read_row = ptr_read_row.get ();
-    }
 
   for (int i = 0; i < size_args.print_size && err == NO_ERROR; i++)
     {
@@ -161,17 +144,9 @@ MPI_read_matrix (const char *filename, size_arguments &size_args, matr *ptr_colu
 
 // ============================================= print ============================================== //
 void
-MPI_print_matrix (size_arguments &size_args, matr *ptr_columns, matrix_type matr_t)
+MPI_print_matrix (size_arguments &size_args, matr *ptr_columns, buff_ptr printed_row, matrix_type matr_t)
 {
-  std::unique_ptr <double []> ptr_printed_row;
-  vect printed_row = nullptr;
   int start_print = 0;
-
-  if (size_args.my_rank == MAIN_PROCESS)
-    {
-      ptr_printed_row = std::make_unique <double []> (size_args.matrix_size);
-      printed_row = ptr_printed_row.get ();
-    }
 
   for (int i = 0; i < size_args.print_size; i++)
     {

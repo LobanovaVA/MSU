@@ -6,26 +6,19 @@
 #include "in_out.h"
 
 int
-MPI_solve (size_arguments &size_args, matr *ptr_columns, vect D, vect B, vect Y)
+MPI_solve (size_arguments &size_args, matr *ptr_columns, vect D, vect B, vect Y, buff_ptr buff_row, double norm)
 {
-  int err = NO_ERROR;
-  double norm;
-
   std::unique_ptr <double []> ptr_diag_inv;
   ptr_diag_inv = std::make_unique <double []> (size_args.block_lim * size_args.squared_block_size);
   buff_ptr diag_inv = ptr_diag_inv.get ();
 
-  norm = MPI_norm_A (size_args, ptr_columns);
-  printf_main_process ("\nMatrix norm = %10.3e\n", norm);
-  norm = (norm < 100) ? norm : 1;
-
-  err = MPI_cholesky (size_args, ptr_columns, D, diag_inv, norm * EPS);
+  int err = MPI_cholesky (size_args, ptr_columns, D, diag_inv, norm * EPS);
   if (err != NO_ERROR)
     return err;
 
   MPI_calc_y (size_args, ptr_columns, B, Y, diag_inv); // answer -> Y
   DB (size_args.matrix_size, D, Y);
-  MPI_calc_x (size_args, ptr_columns, Y, B); // answer -> B
+  MPI_calc_x (size_args, ptr_columns, Y, B, buff_row); // answer -> B
   if (size_args.my_rank == MAIN_PROCESS)
     memcpy (Y, B, size_args.matrix_size * sizeof (double));
 
@@ -275,17 +268,9 @@ MPI_calc_y (size_arguments &size_args, matr *ptr_columns, vect B, vect Y, buff_p
 
 
 void
-MPI_calc_x (size_arguments &size_args, matr *ptr_columns, vect B, vect X)
+MPI_calc_x (size_arguments &size_args, matr *ptr_columns, vect B, vect X, buff_ptr elem_row)
 {
   double sum;
-  std::unique_ptr <double []> ptr_elem_row;
-  vect elem_row = nullptr;
-
-  if (size_args.my_rank == MAIN_PROCESS)
-    {
-      ptr_elem_row = std::make_unique <double []> (size_args.matrix_size);
-      elem_row = ptr_elem_row.get ();
-    }
 
   for (int i = size_args.matrix_size - 1; i >= 0; i--)
     {
