@@ -1,4 +1,4 @@
-#include "block_action.h"
+﻿#include "block_action.h"
 
 #include "in_out.h"
 #if 0
@@ -137,6 +137,7 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
 
   int count, owner;
   int ind_bl = ind / size_args.block_size;
+  int col_width = size_args.get_col_width (ind_bl);
   int ind_bl_mult_block_size = ind_bl * size_args.block_size;
 
   if (action == GATHER)
@@ -151,12 +152,12 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
           for (int j = 0; j < ind_bl_mult_block_size; j++)
             {
               buff_row [j] = *msg_place;
-              msg_place += size_args.get_col_width (ind_bl);
+              msg_place += col_width;
             }
 
           // === 1-st part elements of the diagonal block === //
           msg_place = ptr_columns[size_args.get_local_bl_ind (ind_bl)];
-          msg_place += ind_bl_mult_block_size * size_args.get_col_width (ind_bl);
+          msg_place += ind_bl_mult_block_size * col_width;
 
           for (int j = ind_bl_mult_block_size; j < ind; j++)
             {
@@ -175,7 +176,7 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
   if (size_args.my_rank == owner)
     {
       msg_place = ptr_columns[size_args.get_local_bl_ind (ind_bl)];
-      msg_place += ind_bl_mult_block_size * size_args.get_col_width (ind_bl);
+      msg_place += ind_bl_mult_block_size * col_width;
       msg_place += get_IND (ind - ind_bl_mult_block_size, ind - ind_bl_mult_block_size, size_args.get_col_width(ind_bl));
 
       switch(action)
@@ -187,21 +188,15 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
             MPI_Recv (msg_place, count, MPI_DOUBLE, MAIN_PROCESS, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
           break;
         case GATHER:
-          if (owner == MAIN_PROCESS)
-            memcpy (buff_row + ind, msg_place, count * sizeof (double));
-          else
-            MPI_Send (msg_place, count, MPI_DOUBLE, MAIN_PROCESS, TAG, MPI_COMM_WORLD);
-          break;
+          memcpy (buff_row + ind, msg_place, count * sizeof (double));
         }
     }
-  else if (size_args.my_rank == MAIN_PROCESS)
-    switch(action)
-      {
-      case SCATTER:
-        MPI_Send (buff_row + ind, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD);  break;
-      case GATHER:
-        MPI_Recv (buff_row + ind, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE); break;
-      }
+  else if (size_args.my_rank == MAIN_PROCESS && action == SCATTER)
+    MPI_Send (buff_row + ind, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD);
+
+
+  if (action == GATHER)
+    MPI_Bcast (buff_row + ind, count, MPI_DOUBLE, owner, MPI_COMM_WORLD);
 
 
   // === elements after diagonal === //
@@ -225,24 +220,14 @@ MPI_action_elem_row (int ind, size_arguments &size_args, matr *ptr_columns, vect
               break;
 
             case GATHER:
-              if (owner == MAIN_PROCESS)
-                memcpy (buff_row + j_bl * size_args.block_size, msg_place, count * sizeof (double));
-              else
-                MPI_Send (msg_place, count, MPI_DOUBLE, MAIN_PROCESS, TAG, MPI_COMM_WORLD);
-              break;
+              memcpy (buff_row + j_bl * size_args.block_size, msg_place, count * sizeof (double));
             }
         }
-      else if (size_args.my_rank == MAIN_PROCESS)
-        switch(action)
-          {
-          case SCATTER:
-            MPI_Send (buff_row + + j_bl * size_args.block_size, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD);
-            break;
+      else if (size_args.my_rank == MAIN_PROCESS && action == SCATTER)
+        MPI_Send (buff_row + j_bl * size_args.block_size, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD);
 
-          case GATHER:
-            MPI_Recv (buff_row + + j_bl * size_args.block_size, count, MPI_DOUBLE, owner, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            break;
-          }
+      if (action == GATHER)
+        MPI_Bcast (buff_row + j_bl * size_args.block_size, count, MPI_DOUBLE, owner, MPI_COMM_WORLD);
     }
 }
 
