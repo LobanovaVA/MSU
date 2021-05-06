@@ -221,3 +221,37 @@ RtB (int size, vect R, vect B, vect Y)
       Y[i] = sum;
     }
 }
+
+void
+RB (int size, vect Ri_inv, vect B_i, vect B)
+{
+  int i, j;
+  double sum;
+
+  for (i = 0; i < size; i++)
+    {
+      sum = 0;
+      for (j = i; j < size; j++)
+        sum += Ri_inv [i * size + j] * B_i[j];
+
+      B[i] = sum;
+    }
+}
+
+
+void
+B_MX (int size, vect B, matr M, vect X)
+{
+  int i, j;
+  double sum;
+
+  for (i = 0; i < size; i++)
+    {
+      sum = 0;
+
+      for (j = 0; j < size; j++)
+        sum += M [i * size + j] * X[j];
+
+      B[i] -= sum;
+    }
+}

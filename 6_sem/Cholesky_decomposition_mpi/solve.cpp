@@ -16,12 +16,19 @@ MPI_solve (size_arguments &size_args, matr *ptr_columns, vect D, vect B, vect Y,
   if (err != NO_ERROR)
     return err;
 
+  double time_solve_Y = clock ();
   MPI_calc_y (size_args, ptr_columns, B, Y, diag_inv); // answer -> Y
-  DB (size_args.matrix_size, D, Y);
-  MPI_calc_x (size_args, ptr_columns, Y, B, buff_row); // answer -> B
-  if (size_args.my_rank == MAIN_PROCESS)
-    memcpy (Y, B, size_args.matrix_size * sizeof (double));
+  time_solve_Y = (clock () - time_solve_Y) / CLOCKS_PER_SEC;
 
+  double time_solve_D = clock ();
+  DB (size_args.matrix_size, D, Y);
+  time_solve_D = (clock () - time_solve_D) / CLOCKS_PER_SEC;
+
+  double time_solve_X = clock ();
+  MPI_calc_x (size_args, ptr_columns, Y, B, buff_row, diag_inv); // answer -> Y
+  time_solve_X = (clock () - time_solve_X) / CLOCKS_PER_SEC;
+
+  printf_main_process("\n\n %.2f  %.2f  %.2f\n\n", time_solve_Y, time_solve_D, time_solve_X);
   return err;
 }
 
@@ -81,7 +88,6 @@ MPI_cholesky (size_arguments &size_args, matr *ptr_columns, vect D, buff_ptr dia
       // === calculate others block R_{is} ->  === //
       for (int s_bl = size_args.get_start_ind (i_bl); s_bl < size_args.block_lim; s_bl +=size_args.comm_size)
         calc_full_block_R (i_bl, s_bl, size_args, ptr_columns, D, R_col, R_i_inv, R_is_buf, R_js_buf);
-
     }
 
   return err;
@@ -178,10 +184,37 @@ calc_diag_block_R (int ind_bl, size_arguments &size_args, vect D, column_bl R_co
   return cholesky (col_width , size_args.block_size, orig_R_i, D_j, eps);;
 }
 
-
 void
 calc_full_block_R (int i_bl, int s_bl, size_arguments &size_args,  matr *ptr_columns, vect D,
-                   column_bl R_col_i, matr_bl Ri_inv, matr_bl R_is, matr_bl R_js)
+                   column_bl R_col_i, matr_bl Ri_inv, matr_bl R_is_bl, matr_bl R_js_bl)
+{
+  if (size_args.mod != 0)
+    return calc_full_block_R_last (i_bl, s_bl, size_args, ptr_columns, D, R_col_i, Ri_inv, R_is_bl, R_js_bl);
+
+  (void) R_js_bl;
+  (void) R_is_bl;
+
+  vect_bl D_j = D;
+  matr_bl R_ji = R_col_i, R_js, R_is;
+
+  R_js = ptr_columns[size_args.get_local_bl_ind (s_bl)];
+  R_is = ptr_columns[size_args.get_local_bl_ind (s_bl)]
+      + i_bl * size_args.squared_block_size;
+
+  for (int j_bl = 0 ; j_bl < i_bl; j_bl++)
+    {
+      A_minus_RtDR (size_args.block_size, size_args.block_size, R_is, R_ji, D_j, R_js);
+      R_ji += size_args.squared_block_size;
+      R_js += size_args.squared_block_size;
+      D_j += size_args.block_size;
+    }
+
+  DRtA (size_args.block_size, D_j, Ri_inv, R_is);
+}
+
+void
+calc_full_block_R_last (int i_bl, int s_bl, size_arguments &size_args,  matr *ptr_columns, vect D,
+                        column_bl R_col_i, matr_bl Ri_inv, matr_bl R_is, matr_bl R_js)
 {
   vect_bl D_j = D;
   matr_bl R_ji = R_col_i;
@@ -198,42 +231,10 @@ calc_full_block_R (int i_bl, int s_bl, size_arguments &size_args,  matr *ptr_col
 
   DRtA (size_args.block_size, D_j, Ri_inv, R_is);
   put_full_block (i_bl, s_bl, size_args, ptr_columns, R_is);
-}//TODO for last block other func without get/put block
+}
 
 
 // ======================================= calculate solution ======================================= //
-#if 0 //old
-void
-MPI_calc_y (size_arguments &size_args, matr *ptr_columns, vect B, vect Y, buff_ptr diag_inv)
-{
-  int col_width;
-  vect_bl B_i = B, Y_j, Y_i = Y;
-  matr_bl R_ji = nullptr, Ri_inv = diag_inv;
-
-  for (int i_bl = 0; i_bl < size_args.block_lim; i_bl++,
-       B_i += size_args.block_size, Y_i += size_args.block_size,
-       Ri_inv += size_args.squared_block_size)
-    {
-      col_width = size_args.get_col_width (i_bl);
-      if (size_args.is_my_column (i_bl))
-        {
-          Y_j = Y;
-          R_ji = ptr_columns [size_args.get_local_bl_ind (i_bl)];
-
-          for (int j_bl = 0; j_bl < i_bl; j_bl++,
-               Y_j += size_args.block_size,
-               R_ji += col_width * size_args.block_size)
-            B_minus_RtY (col_width, size_args.block_size, B_i, R_ji, Y_j);
-
-          RtB (col_width, Ri_inv, B_i, Y_i);
-        }
-
-      MPI_Bcast (Y_i, col_width, MPI_DOUBLE,
-                 size_args.get_column_owner (i_bl), MPI_COMM_WORLD);
-    }
-}
-#endif
-
 void
 MPI_calc_y (size_arguments &size_args, matr *ptr_columns, vect B, vect Y, buff_ptr diag_inv)
 {
@@ -268,7 +269,7 @@ MPI_calc_y (size_arguments &size_args, matr *ptr_columns, vect B, vect Y, buff_p
 
 
 void
-MPI_calc_x (size_arguments &size_args, matr *ptr_columns, vect B, vect X, buff_ptr elem_row)
+MPI_calc_x_last (size_arguments &size_args, matr *ptr_columns, vect B, vect X, buff_ptr elem_row)
 {
   double sum;
 
@@ -284,6 +285,40 @@ MPI_calc_x (size_arguments &size_args, matr *ptr_columns, vect B, vect X, buff_p
 
           X[i] = (B[i] - sum) / elem_row[i];
         }
+    }
+
+  if (size_args.my_rank == MAIN_PROCESS)
+    memcpy (B, X, size_args.matrix_size * sizeof (double));
+
+  //MPI_Bcast (B, size_args.matrix_size, MPI_DOUBLE, MAIN_PROCESS, MPI_COMM_WORLD);
+}
+
+void
+MPI_calc_x (size_arguments &size_args, matr *ptr_columns, vect B, vect X, buff_ptr elem_row, buff_ptr diag_inv)
+{
+  if (size_args.mod != 0)
+    return MPI_calc_x_last (size_args, ptr_columns, B, X, elem_row);
+
+  vect_bl B_j, B_i;
+  matr_bl Rj_inv, R_i;
+
+  B_j = B + (size_args.matrix_size - size_args.block_size);
+  Rj_inv = diag_inv + (size_args.block_lim - 1) * size_args.squared_block_size;
+
+  for (int j_bl = size_args.block_lim - 1; j_bl >= 0; j_bl--, B_j -= size_args.block_size, Rj_inv -= size_args.squared_block_size)
+    {
+      if (size_args.is_my_column (j_bl))
+        {
+          RB (size_args.block_size, Rj_inv, B_j, B_j);
+
+          B_i = B;
+          R_i = ptr_columns[size_args.get_local_bl_ind (j_bl)];
+
+          for (int i_bl = 0; i_bl < j_bl; i_bl++, B_i += size_args.block_size, R_i += size_args.squared_block_size)
+            B_MX (size_args.block_size, B_i, R_i, B_j);
+        }
+
+      MPI_Bcast (B, size_args.matrix_size, MPI_DOUBLE, size_args.get_column_owner (j_bl), MPI_COMM_WORLD);
     }
 }
 
