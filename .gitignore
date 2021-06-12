@@ -39,8 +39,8 @@ tags
 *.pro.user*
 CMakeLists*
 build-*/
-/.qmake.cache
-/.qmake.stash
+*.qmake.cache
+*.qmake.stash
 
 # xemacs temporary files
 *.flc
