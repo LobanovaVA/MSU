@@ -1,0 +1,68 @@
+\section{Отладочный тест}
+\subsection{Постановка задачи}
+Рассмотрим область $Q = [0,1] \times[0, 1]$ и зададим функции $\rho$ и $u$:
+\begin{align}
+\label{debug_f}
+& \tilde{\rho}(t, x) = e^{t} (\cos(3 \pi x) + 1.5) &
+& \tilde{u}(t, x) = \cos(2 \pi t) \sin(4 \pi x)
+\end{align}
+
+Определим функции $f_{0}$ (отличную от нуля правую часть уравнения неразрывности) и $f$ так, чтобы функции $\tilde{\rho}$ и $\tilde{u}$ удовлетворяли системе (\ref{system:1}) с правой частью, составленной из этих функций, а именно:
+\begin{equation*}
+\left\{
+ \begin{aligned}
+  & \dfrac{\partial \tilde{\rho}}{\partial t} 
+    + \dfrac{\partial \tilde{\rho} \tilde{u}}{\partial x} 
+    = f_0 \\
+  & \tilde{\rho} \dfrac{\partial \tilde{u}}{\partial t} 
+    + \tilde{\rho} \tilde{u} \dfrac{\partial \tilde{u}}{\partial x} 
+    + \dfrac {\partial p} {\partial x} 
+    = \mu \dfrac{\partial^{2} \tilde{u}}{\partial x ^{2}} 
+    + \tilde{\rho} f \\
+  & p = p(\tilde{\rho})
+ \end{aligned}
+\right.
+\end{equation*}
+
+Выпишем отдельно все частные производные, необходимые для подсчета функций $f$ и $f_{0}$:
+\begin{align*}
+  \dfrac{\partial \tilde{\rho}}{\partial t}
+    &= e^{t} (\cos(3 \pi x) + 1.5) = \tilde{\rho}
+  & \dfrac{\partial \tilde{\rho}}{\partial x}
+    &= - 3\pi e^{t} \sin(3 \pi x) \\
+  \dfrac{\partial \tilde{g}}{\partial t} 
+    &= \dfrac{\partial \ln \tilde{\rho}}{\partial t}
+     = \frac{1}{\tilde{\rho}} \dfrac{\partial \tilde{\rho}}{\partial t} = 1 
+  & \dfrac{\partial \tilde{g}}{\partial x} 
+    &= \dfrac{\partial \ln \tilde{\rho}}{\partial x}
+     = \frac{1}{\tilde{\rho}} \dfrac{\partial \tilde{\rho}}{\partial x} \\
+  \dfrac{\partial \tilde{u}}{\partial t}
+    &= -2\pi \sin(2 \pi t) \sin(4 \pi x) 
+  & \dfrac{\partial \tilde{u}}{\partial x}
+    &=  4\pi \cos(2 \pi t) \cos(4 \pi x)
+\end{align*}
+\begin{equation*}
+  \dfrac{\partial^{2} \tilde{u}}{\partial x^2}
+    = -16\pi^2 \cos(2 \pi t) \sin(4 \pi x)
+\end{equation*}
+
+Выписывать явный вид для функций $f$ и $f_{0}$ не имеет смысла, так они являются комбинациями описанных выше функций и производных и намного проще реализовать отдельные части этих комбинаций.
+
+Таким образом, функции (\ref{debug_f}) являются гладким точным решением дифференциальной задачи (\ref{system:1}) с начальными и граничными условиями:
+\begin{equation*}
+\begin{aligned}
+  & \tilde{\rho}(0,x) = \cos(3 \pi x) + 1.5, x \in [0,1] \\
+  & \tilde{u}(0,x) = \sin(4 \pi x), x \in[0,1] \\
+  & \tilde{u}(t,0) = u(t,1) = 0, t \in [0,1]
+\end{aligned}
+\end{equation*}
+
+\subsection{Численные эксперименты}
+Будем рассматривать зависимость $p(\rho) = C \rho$.
+Ниже приведены результаты численных экспериментов, а именно таблицы с невязками (нормами разности между разностным решением и точным решением дифференциальной задачи на последнем временном слое) для различных пар параметров:
+$$ \mu \in \{0.1, 0.01, 0.001\}, \quad C \in \{1, 10, 100\} $$
+
+Для каждой такой пары также варьируются шаги сетки $\tau$ и $h$:
+$$ (\tau, h) \in \{ 10^{-1}, 10^{-2}, 10^{-3}, 10^{-4} \}^2 $$ 
+
+\newpage

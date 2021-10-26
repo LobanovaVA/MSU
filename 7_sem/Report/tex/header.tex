@@ -1,0 +1,49 @@
+\documentclass[specialist, subf, href, colorlinks=true, 14pt, times, mtpro, final]{disser}
+
+\usepackage[T2A]{fontenc}           % кодировка шрифтов
+\usepackage[utf8]{inputenc}         % кодировка
+\usepackage[english,russian]{babel} % правила переноса слов
+%\usepackage{newcomputermodern}
+
+\usepackage{amsmath}                % верстка математические формулы
+\usepackage{amsfonts}               % поддержка ажурного и готического шрифтов
+\usepackage{amssymb}                % дополнительные математические символы
+
+\usepackage{float}                  % размещение плавающих объектов
+\usepackage{caption}                % подписи картинок, таблиц
+\usepackage{enumerate}              % пронумерованные списки
+
+\usepackage{hyperref}
+\usepackage{graphicx}               % графики
+\graphicspath{{pics/}}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+\usepackage{tcolorbox}              % задание цвета
+\setcounter{page}{2}                % начать нумерацию страниц с
+\setcounter{tocdepth}{2}
+
+\usepackage[a4paper, mag=1000, includefoot, left=2cm, right=2.5cm, 
+	top=2cm, bottom=2cm, headsep=1cm, footskip=1cm]{geometry}
+
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0mm}
+
+\def\Div{\mathop{\rm div}\nolimits}
+\def\const{\mathop{\rm const}\nolimits}
+
+\def\Bold#1{{\bfseries #1}}
+\def\Bf#1{{\bf #1}}
+\def\Sl#1{{\sl #1}}
+
+\def\InfoBox#1
+{
+\begin{tcolorbox}[colframe=blue, valign=center]%
+		#1
+\end{tcolorbox}
+}
+
+\definecolor{flawdye}{rgb}{0.29, 0.0, 0.51}
+\def\ColorSection{flawdye}
+\def\FlawdyeText#1{\textcolor{\ColorSection}{#1}}
+
+\newcommand{\FC}[1]{\underline{\hspace{0.6cm}}#1\underline{\hspace{0.6cm}}}

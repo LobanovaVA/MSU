@@ -1,0 +1,155 @@
+\section{Введение}
+
+\subsection{Постановка задачи}
+
+В работе будет рассматриваться разностная схема с центральными разностями ($\ln{\rho}$, $u$) для решения начально-краевых задач для системы уравнений, описывающей нестационарное одномерное движение вязкого баротропного газа:
+
+\begin{equation}
+\label{system:1}
+\left\{
+ \begin{aligned}
+  & \dfrac{\partial \rho}{\partial t} 
+    + \dfrac{\partial \rho u}{\partial x} 
+    = 0 \\
+  & \rho \dfrac{\partial u}{\partial t} 
+    + \rho u \dfrac{\partial u}{\partial x} 
+    + \dfrac {\partial p} {\partial x} 
+    = \mu \dfrac{\partial^{2} u}{\partial x ^{2}} 
+    + \rho f \\
+  & p = p (\rho)
+ \end{aligned}
+\right.
+\end{equation}
+
+\bigskip
+В данной схеме известными считаются:
+\begin{itemize}
+	\item $\mu$ -- коэффициент вязкости газа, который считаем известной поло­жительной константой.
+	\item $p$ -- функция давления газа.
+	Будем использовать две возможные зависимости: \\
+	$p(\rho) = C\rho$, где $C$ -- неотрицательная константа или \\
+	$p(\rho) = \rho ^{\gamma}$, где $\gamma = 1.4$.
+	\item $f$ -- вектор внешних сил, являющийся функцией переменных Эйлера 
+	$(t,x) \in Q = [0,T] \times [0,X]$.
+\end{itemize}
+
+Неизвестными же считаются функции переменных Эйлера:
+\begin{itemize}
+	\item $\rho$ -- функция плотности;
+	\item $u$ -- функция скорости.
+\end{itemize}
+
+Дополним систему (\ref{system:1}) начальными и граничными условиями.
+В начальный момент времени задаются функции, значениями которых являются плотность и скорость газа в точках отрезка $[0, X]$, а граничными условиями являются условия непротекания.
+
+\begin{equation}
+\label{system:2}
+\left\{
+ \begin{aligned}
+  & (\rho, u)|_{t = 0} =
+    (\rho_{0}, \,u_{0}), \,  
+    x \in [0, X] \\
+  & u(t, 0) = u(t, X) = 0, \,
+    t \in [0, T] 
+ \end{aligned}
+\right.
+\end{equation}
+
+
+\subsection{Преобразования}
+Преобразуем систему (\ref{system:1}) следующим образом. Раскроем конвективное слагаемое, используя формулу дифференцирования произведения функций, поделим получившиеся выражение на $\rho$, обозначим $g = \ln \rho$ и получим:
+$$
+  \frac{1}{\rho} \dfrac{\partial \rho}{\partial t} 
+  + \frac{u}{\rho} \dfrac{\partial \rho}{\partial x} 
+  + \dfrac{\partial u}{\partial x} = 0 
+  \;\Rightarrow\;
+  \dfrac{\partial g}{\partial t} 
+  + u \dfrac{\partial g}{\partial x} 
+  + \dfrac{\partial u}{\partial x} = 0 
+$$$$
+  \dfrac{\partial g}{\partial t} 
+  + \frac{1}{2} \left(
+    u \dfrac{\partial g}{\partial x} 
+    + \dfrac{\partial ug}{\partial x} 
+    + (2 - g)\dfrac{\partial u}{\partial x}
+  \right) = 0 
+$$
+
+Аналогичное проделаем со вторым уравнением:
+$$
+  \dfrac{\partial u}{\partial t} 
+  + \frac{1}{3} \left(
+    u \dfrac{\partial u}{\partial x} 
+    + \dfrac{\partial u^2}{\partial x} 
+  \right) 
+  + \tilde{p}'(e^{g}) \dfrac{\partial g}{\partial x} 
+  = \mu e^{-g} \dfrac{\partial^2 u}{\partial x^2} + f
+$$
+где  $\tilde{p}'(x) = \dfrac{\partial p}{\partial \rho}(x)$
+
+В итоге система (\ref{system:1}) преобразуется к виду:
+\begin{equation}
+\label{system:3}
+\left\{
+ \begin{aligned}
+  & \dfrac{\partial g}{\partial t} 
+    + \frac{1}{2} \left(
+      u \dfrac{\partial g}{\partial x} 
+      + \dfrac{\partial ug}{\partial x} 
+      + (2 - g)\dfrac{\partial u}{\partial x}
+    \right) = f_0  \\
+  & \dfrac{\partial u}{\partial t} 
+    + \frac{1}{3} \left(
+      u \dfrac{\partial u}{\partial x} 
+      + \dfrac{\partial u^2}{\partial x} 
+    \right) 
+    + \tilde{p}'(e^{g}) \dfrac{\partial g}{\partial x} 
+    = \mu e^{-g} \dfrac{\partial^2 u}{\partial x^2} + f \\
+  & \tilde{p}'(x) = \dfrac{\partial p}{\partial \rho}(x) \\
+  & g = \ln \rho \\
+  & p = p (\rho)
+ \end{aligned}
+\right.
+\end{equation}
+
+
+\subsection{Основные обозначения}
+Рассмотрим временной интервал $\Omega_t = [0,T]$ и пространственную область в виде отрезка $\Omega_x = [0, X]$, введем на них равномерные сетки с шагом $\tau$ и $h$ соответственно:
+$$ \bar w_{\tau} = \{n \tau \,|\, n = 0,\dots,N\}, \;\text{где}\; N \tau = T $$
+$$ \bar w_{h} = \{mh \,|\, m = 0,\dots,M\}, \;\text{где}\; Mh = X $$
+В области $ Q := \bar \Omega_{\tau} \times \bar \Omega_{h} $ 
+вводится сетка $ \bar Q_{\tau h} := \bar \omega_{\tau} \times \bar \omega_{h} $.
+
+
+Значение функции $g$ в узле $(m, n)$ будем обозначать через $g_{n}^{m}$
+Для сокращения записей будем также использовать следующие обозначения:\label{obozn}
+$$ 
+  g_{m}^{n+1} = \hat g 
+  \,,\quad 
+  g_{m \pm 1}^{n} = g^{\pm 1} 
+$$
+
+Обозначения для среднего значения величин сеточной функции в двух соседних узлах:
+$$
+  g_{s} = \frac{g_{m+1}^{n} + g_{m}^{n}}{2}
+  \,,\quad
+  g_{\bar s} = \frac {g_{m}^{n} + g_{m-1}^{n}}{2}
+$$
+
+Для разностных операторов применяются следующие обозначения:
+$$
+  g_{t}=\frac{g_{m}^{n+1}-g_{m}^{n}}{\tau}
+  \,,\quad
+  g_{x}=\frac{g_{m+1}^{n}-g_{m}^{n}}{h}
+$$
+$$
+  g_{\mathring{x}} = \frac{g^n_{m + 1} - g^n_{m - 1}}{2 h}
+  \,,\quad
+  g_{\bar{x}}=\frac{g_{m}^{n}-g_{m-1}^{n}}{h}
+$$
+$$
+  g_{x \bar{x}}= (g_{x})_{\bar{x}} 
+  = \frac{g_{m-1}^{n}-2 g_{m}^{n}+g_{m+1}^{n}}{h^{2}}
+$$
+
+\newpage
