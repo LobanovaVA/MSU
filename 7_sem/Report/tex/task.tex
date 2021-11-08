@@ -11,21 +11,21 @@
   & 
     G_t + 0.5 [
       V \hat G_{\mathring{x}} + (V \hat G)_{\mathring{x}} +
-      2 \hat V_{\mathring{x}} - G V_{\mathring{x}} ] = 0 
+      2 \hat V_{\mathring{x}} - G V_{\mathring{x}} ] = f_0 
   \\
   & 
     G_{t,0} + 0.5 [
       (V \hat G)_{x,0} + 2 \hat V_{x,0} - G_0 V_{x,0}] - \\
   & - 0.5h [
       (GV)_{x \bar x, 1} - 0.5(GV)_{x \bar x, 2} +
-      (2 - G_0) (V_{x \bar x, 1} - 0.5V_{x \bar x, 2}) ] = 0
+      (2 - G_0) (V_{x \bar x, 1} - 0.5V_{x \bar x, 2}) ] = (f_0)_0
   \\
   & 
     G_{t,M} + 0.5 [
-      (V \hat G)_{\bar x,M} + 2 \hat V_{\bar x,M} - G_0 V_{\bar x,M}] + \\
+      (V \hat G)_{\bar x,M} + 2 \hat V_{\bar x,M} - G_M V_{\bar x,M}] + \\
   & + 0.5h [
       (GV)_{x \bar x, M-1} - 0.5(GV)_{x \bar x, M-2} +
-      (2 - G_M) (V_{x \bar x, M-1} - 0.5V_{x \bar x, M-2}) ] = 0
+      (2 - G_M) (V_{x \bar x, M-1} - 0.5V_{x \bar x, M-2}) ] = (f_0)_{M}
   \\
   & 
     V_t + \frac13 [V \hat V_{\mathring{x}} + (V \hat V)_{\mathring{x}} ] + 
@@ -36,7 +36,7 @@
 \right.
 \end{equation}
 
-где $ \tilde{\mu} = \mu \lVert e^{-G} \rVert_C $ и 
+где $f_0 \equiv 0$, $ \tilde{\mu} = \mu \lVert e^{-G} \rVert_C $ и 
 $\tilde{p}'(x) = \dfrac{\partial p}{\partial \rho}(x)$
 
 В качестве значений разностного решения на нулевом слое берутся проекции на
@@ -48,20 +48,21 @@ $$
 $$
 
 Граничные значения функции скорости равны нулю:
-$$
+\begin{equation}
+\label{system:gran}
    V_{0}^{n} = V_{M}^{n} = 0, \quad
    n = 1,\dots,N
-$$
+\end{equation}
 
 \subsection{Координатная запись уравнений}
 Пользуясь обозначениями, приведенными в разделе \ref{obozn}, перепишем уравнения из (\ref{system:4}) в координатном виде.
 
-\subsubsection*{Первое уравнение}
+\subsubsection{Первое уравнение}
 $m = 1,\dots, M - 1$
 \begin{equation*}
   G_t + 0.5 [
     V \hat G_{\mathring{x}} + (V \hat G)_{\mathring{x}} +
-    2 \hat V_{\mathring{x}} - G V_{\mathring{x}} ] = 0 
+    2 \hat V_{\mathring{x}} - G V_{\mathring{x}} ] = (f_0)_{m}^{n}
 \end{equation*}
 \begin{multline*}
   \frac{G_{m}^{n+1} - G_{m}^{n}}{\tau} + \frac12 \left[
@@ -70,33 +71,34 @@ $m = 1,\dots, M - 1$
     \right. +{} \\ {}+ \left.
     2 \frac{V_{m+1}^{n+1} - V_{m-1}^{n+1}}{2h} -
     G_{m}^{n}\frac{V_{m+1}^{n} - V_{m-1}^{n}}{2h}
-  \right] = 0
+  \right] = (f_0)_{m}^{n}
 \end{multline*}
 \begin{multline*}
-  G_{m+1}^{n+1} \left( \frac{V_{m}^{n} + V_{m+1}^{n}}{4h} \right) +
+  G_{m-1}^{n+1} \left(-\frac{V_{m}^{n} + V_{m-1}^{n}}{4h} \right) +
   G_{m}^{n+1}   \left( \frac{1}{\tau} \right) +
-  G_{m-1}^{n+1} \left(-\frac{V_{m}^{n} + V_{m-1}^{n}}{4h} \right)
+  G_{m+1}^{n+1} \left( \frac{V_{m}^{n} + V_{m+1}^{n}}{4h} \right)
   +{} \\ {}+
-  V_{m+1}^{n+1} \left( \frac{1}{2h} \right) +
-  V_{m-1}^{n+1} \left(-\frac{1}{2h} \right) =
+  V_{m-1}^{n+1} \left(-\frac{1}{2h} \right) +
+  V_{m+1}^{n+1} \left( \frac{1}{2h} \right)
+   = (f_0)_{m}^{n} + 
   G_{m}^{n} \left( \frac{1}{\tau} + \frac{V_{m+1}^{n} - V_{m-1}^{n}}{4h} \right) 
 \end{multline*}
 
 
-\paragraph{Второе уравнение}
+\subsubsection{Второе уравнение}
+$m = 0 $
 \begin{multline*}
-m = 0 
-\\
   G_{t,0} + 0.5 [(V \hat G)_{x,0} + 2 \hat V_{x,0} - G_0 V_{x,0}]
   -{} \\ {}-
   0.5h [
     (GV)_{x \bar x, 1} - 0.5(GV)_{x \bar x, 2} +
-    (2 - G_0) (V_{x \bar x, 1} - 0.5V_{x \bar x, 2}) ] = 0
-\\
+    (2 - G_0) (V_{x \bar x, 1} - 0.5V_{x \bar x, 2}) ] = (f_0)_0
+\end{multline*}
+\begin{multline*}
   G_{t,0} + 0.5 [(V \hat G)_{x,0} + 2 \hat V_{x,0} - G_0 V_{x,0}]
   -{} \\ {}-
   0.5h  [(GV)_{x \bar x, 1} + (2 - G_0) V_{x \bar x, 1}] +
-  0.25h [(GV)_{x \bar x, 2} + (2 - G_0) V_{x \bar x, 2}]  = 0
+  0.25h [(GV)_{x \bar x, 2} + (2 - G_0) V_{x \bar x, 2}] = (f_0)_0
 \end{multline*}
 \begin{multline*}
   \frac{G_{0}^{n+1} - G_{0}^{n}}{\tau} 
@@ -112,36 +114,50 @@ m = 0
  \frac{h}{4} \left[
     \frac{G_{1}^{n} V_{1}^{n} - 2 G_{2}^{n} V_{2}^{n} + G_{3}^{n} V_{3}^{n}}{h^2} + 
     (2 - G_{0}^{n}) \frac{V_{1}^{n} - 2 V_{2}^{n} + V_{3}^{n}}{h^2}
-    \right] = 0
+    \right] = (f_0)_{0}^{n}
 \end{multline*}
 \begin{equation*}
   \frac{G_{0}^{n+1} - G_{0}^{n}}{\tau} 
   + \frac12 \left[
     \frac{V_{1}^{n} G_{1}^{n+1} - V_{0}^{n} G_{0}^{n+1}}{h} 
-    + 2 \frac{V_{1}^{n+1} - V_{0}^{n+1}}{h} \right] + A_{0}^{n} = 0
+    + 2 \frac{V_{1}^{n+1} - V_{0}^{n+1}}{h} \right] 
+    + \hat A_{0}^{n} = (f_0)_{0}^{n}
 \end{equation*}
 \begin{equation*}
-  G_{1}^{n+1} \left( \frac{V_{1}^{n}}{2h} \right) +
   G_{0}^{n+1} \left( \frac{1}{\tau} - \frac{V_{0}^{n}}{2h} \right) +
-  V_{1}^{n+1} \left( \frac{1}{h} \right) +
-  V_{0}^{n+1} \left(-\frac{1}{h} \right) = \frac{G_{0}^{n}}{\tau} - A_{0}^{n}
+  G_{1}^{n+1} \left( \frac{V_{1}^{n}}{2h} \right) +
+  V_{0}^{n+1} \left(-\frac{1}{h} \right) +
+  V_{1}^{n+1} \left( \frac{1}{h} \right)
+  = A_{0}^{n}
 \end{equation*}
-
-
-\paragraph{Третье уравнение}
 \begin{multline*}
-m = M 
-\\
+  A_{0}^{n} = (f_0)_{0}^{n} + \frac{G_{0}^{n}}{\tau} - \hat A_{0}^{n} = 
+  (f_0)_{0}^{n} + G_{0}^{n} \left( \frac{1}{\tau} + \frac{V_{1}^{n} - V_{0}^{n}}{2h} \right) 
+  +{} \\ {}+
+  \frac{1}{2h} \left[
+    G_{0}^{n} V_{0}^{n} - 2 G_{1}^{n} V_{1}^{n} + G_{2}^{n} V_{2}^{n} + 
+    (2 - G_{0}^{n}) (V_{0}^{n} - 2 V_{1}^{n} + V_{2}^{n})
+    \right] -{} \\ {}-
+  \frac{1}{4h} \left[
+    G_{1}^{n} V_{1}^{n} - 2 G_{2}^{n} V_{2}^{n} + G_{3}^{n} V_{3}^{n} + 
+    (2 - G_{0}^{n}) (V_{1}^{n} - 2 V_{2}^{n} + V_{3}^{n})
+    \right]
+\end{multline*}
+
+\subsubsection{Третье уравнение}
+$m = M$
+\begin{multline*}
   G_{t,M} + 0.5 [(V \hat G)_{\bar x,M} + 2 \hat V_{\bar x,M} - G_0 V_{\bar x,M}]
   +{} \\ {}+
   0.5h [
     (GV)_{x \bar x, M-1} - 0.5(GV)_{x \bar x, M-2} +
-    (2 - G_M) (V_{x \bar x, M-1} - 0.5V_{x \bar x, M-2}) ] = 0
-\\
+    (2 - G_M) (V_{x \bar x, M-1} - 0.5V_{x \bar x, M-2}) ] = (f_0)_M
+\end{multline*}
+\begin{multline*}
   G_{t,M} + 0.5 [(V \hat G)_{\bar x,M} + 2 \hat V_{\bar x,M} - G_0 V_{\bar x,M}]
   +{} \\ {}+
   0.5h  [(GV)_{x \bar x, M-1} + (2 - G_M) V_{x \bar x, M-1}] -
-  0.25h [(GV)_{x \bar x, M-2} + (2 - G_M) V_{x \bar x, M-2}]  = 0
+  0.25h [(GV)_{x \bar x, M-2} + (2 - G_M) V_{x \bar x, M-2}]  = (f_0)_M
 \end{multline*}
 \begin{multline*}
   \frac{G_{M}^{n+1} - G_{M}^{n}}{\tau} 
@@ -157,20 +173,35 @@ m = M
  \frac{h}{4} \left[
     \frac{G_{M-3}^{n} V_{M-3}^{n} - 2 G_{M-2}^{n} V_{M-2}^{n} + G_{M-1}^{n} V_{M-1}^{n}}{h^2} + 
     (2 - G_{M}^{n}) \frac{V_{M-3}^{n} - 2 V_{M-2}^{n} + V_{M-1}^{n}}{h^2}
-    \right] = 0
+    \right] = (f_0)_{M}^{n}
 \end{multline*}
 \begin{equation*}
   \frac{G_{M}^{n+1} - G_{M}^{n}}{\tau} 
   + \frac12 \left[
     \frac{V_{M}^{n} G_{M}^{n+1} - V_{M-1}^{n} G_{M-1}^{n+1}}{h} 
-    + 2 \frac{V_{M}^{n+1} - V_{M-1}^{n+1}}{h} \right] + A_{M}^{n} = 0
+    + 2 \frac{V_{M}^{n+1} - V_{M-1}^{n+1}}{h} \right] 
+  + \hat A_{M}^{n} = (f_0)_{M}^{n}
 \end{equation*}
 \begin{equation*}
-  G_{M}^{n+1} \left( \frac{1}{\tau} - \frac{V_{M}^{n}}{2h} \right) +
-  G_{M-1}^{n+1} \left( \frac{V_{M-1}^{n}}{2h} \right) +
-  V_{M}^{n+1} \left( \frac{1}{h} \right) +
-  V_{M-1}^{n+1} \left(-\frac{1}{h} \right) = \frac{G_{M}^{n}}{\tau} - A_{M}^{n}
+  G_{M-1}^{n+1} \left( - \frac{V_{M-1}^{n}}{2h} \right) +
+  G_{M}^{n+1} \left( \frac{1}{\tau} + \frac{V_{M}^{n}}{2h} \right) +
+  V_{M-1}^{n+1} \left(-\frac{1}{h} \right) +
+  V_{M}^{n+1} \left( \frac{1}{h} \right) 
+  = A_{M}^{n}
 \end{equation*}
+\begin{multline*}
+  A_{M}^{n} = (f_0)_{M}^{n} + \frac{G_{M}^{n}}{\tau} -\hat A_{M}^{n} = 
+  (f_0)_{M}^{n} + G_{M}^{n} \left( \frac{1}{\tau} + \frac{V_{M}^{n} - V_{M-1}^{n}}{2h} \right)
+  -{} \\ {}-
+  \frac{1}{2h} \left[
+    G_{M-2}^{n} V_{M-2}^{n} - 2 G_{M-1}^{n} V_{M-1}^{n} + G_{M}^{n} V_{M}^{n} + 
+    (2 - G_{M}^{n}) (V_{M-2}^{n} - 2 V_{M-1}^{n} + V_{M}^{n})
+    \right] +{} \\ {}+
+  \frac{1}{4h} \left[
+    G_{M-3}^{n} V_{M-3}^{n} - 2 G_{M-2}^{n} V_{M-2}^{n} + G_{M-1}^{n} V_{M-1}^{n} + 
+    (2 - G_{M}^{n}) (V_{M-3}^{n} - 2 V_{M-2}^{n} + V_{M-1}^{n})
+    \right]
+\end{multline*}
 
 
 \subsubsection*{Четвёртое уравнение}
@@ -193,8 +224,8 @@ $m = 1,\dots, M-1$
     \frac{V_{m-1}^{n} - 2 V_{m}^{n} + V_{m+1}^{n}}{h^2} + f_{m}^{n}
 \end{multline*}
 \begin{multline*}
+  G_{m-1}^{n+1} \left(-\frac{\tilde{p}'(exp(G_{m}^{n}))}{2h} \right) +
   G_{m+1}^{n+1} \left( \frac{\tilde{p}'(exp(G_{m}^{n}))}{2h} \right) +
-  G_{m-1}^{n+1} \left(-\frac{\tilde{p}'(exp(G_{m}^{n}))}{4h} \right) +
   V_{m}^{n+1} \left( \frac{1}{\tau} + \frac{2\tilde{\mu}}{h^2} \right)
   +{} \\ {}+
   V_{m+1}^{n+1} \left( 
@@ -207,3 +238,16 @@ $m = 1,\dots, M-1$
     \frac{V_{m-1}^{n} - 2 V_{m}^{n} + V_{m+1}^{n}}{h^2} + f_{m}^{n}
 \end{multline*}
 
+
+
+\subsection{Программная реализация}
+Разностная схема составлена таким образом, что система (\ref{system:4}) с начальными и граничными условиями является линейной относительно переменных $G_{m}^{n+1}$ и $V_{m}^{n+1}$, $m=0,1, \dots ,M$. \\
+
+В системе $2M$ уравнений, они упорядочены следующим образом: 
+\begin{itemize}
+  \item для $k=2m$, $m=0,1, \dots ,M$ записаны уравнения для $G_{m}^{n+1}$ - 1-3 уравнения из схемы (\ref{system:4});
+  \item для $k=2m+1$, $m=0,1, \dots ,M$ записаны уравнения для $V_{m}^{n+1}$ - четвертое уравнение из схемы (\ref{system:4}) и граничные значения (\ref{system:gran}). 
+\end{itemize}
+
+Из координатного вида уравнений видно, что матрица у системы является разреженной - в каждой строке не более 5 ненулевых элементов, поэтому для решения системы использовался стабилизированный метод бисопряжённых градиентов (англ. bi-conjugate gradient stabilized method, BiCGStab) с использованием ILUT (Incomplete LU with Threshold) предобусловливателя.
+Реализация метода была взята из библиотеки Eigen (см. \cite{Eigen}), все параметры, кроме предобусловливателя, по умолчанию.

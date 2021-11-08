@@ -1,4 +1,5 @@
 \section{Отладочный тест}
+
 \subsection{Постановка задачи}
 Рассмотрим область $Q = [0,1] \times[0, 1]$ и зададим функции $\rho$ и $u$:
 \begin{align}
@@ -7,18 +8,20 @@
 & \tilde{u}(t, x) = \cos(2 \pi t) \sin(4 \pi x)
 \end{align}
 
-Определим функции $f_{0}$ (отличную от нуля правую часть уравнения неразрывности) и $f$ так, чтобы функции $\tilde{\rho}$ и $\tilde{u}$ удовлетворяли системе (\ref{system:1}) с правой частью, составленной из этих функций, а именно:
+Определим функции $f_{0}$ (отличную от нуля правую часть уравнения неразрывности) и $f$ так, чтобы функции $\tilde{\rho}$ и $\tilde{u}$ удовлетворяли системе (\ref{system:3}) с правой частью, составленной из этих функций, а именно:
 \begin{equation*}
 \left\{
  \begin{aligned}
-  & \dfrac{\partial \tilde{\rho}}{\partial t} 
-    + \dfrac{\partial \tilde{\rho} \tilde{u}}{\partial x} 
+  & \dfrac{\partial \tilde{g}}{\partial t} 
+    + \tilde{u} \dfrac{\partial \tilde{g}} {\partial x} 
+    + \dfrac{\partial \tilde{u}} {\partial x} 
     = f_0 \\
-  & \tilde{\rho} \dfrac{\partial \tilde{u}}{\partial t} 
-    + \tilde{\rho} \tilde{u} \dfrac{\partial \tilde{u}}{\partial x} 
-    + \dfrac {\partial p} {\partial x} 
-    = \mu \dfrac{\partial^{2} \tilde{u}}{\partial x ^{2}} 
-    + \tilde{\rho} f \\
+  & \dfrac{\partial \tilde{u}}{\partial t} 
+    + \tilde{u} \dfrac{\partial \tilde{u}}{\partial x} 
+    + \tilde{p}'(e^{g}) \dfrac{\partial g}{\partial x} 
+    = \mu e^{-g} \dfrac{\partial^{2} \tilde{u}}{\partial x ^{2}} 
+    + f \\
+  & \tilde{p}'(x) = \dfrac{\partial p}{\partial \rho}(x) \\
   & p = p(\tilde{\rho})
  \end{aligned}
 \right.
@@ -58,11 +61,30 @@
 \end{equation*}
 
 \subsection{Численные эксперименты}
-Будем рассматривать зависимость $p(\rho) = C \rho$.
-Ниже приведены результаты численных экспериментов, а именно таблицы с невязками (нормами разности между разностным решением и точным решением дифференциальной задачи на последнем временном слое) для различных пар параметров:
-$$ \mu \in \{0.1, 0.01, 0.001\}, \quad C \in \{1, 10, 100\} $$
+Будем рассматривать зависимости
+$$ 
+  p(\rho) = C \rho, \; C \in \{1, 10, 100\} ; \quad
+  p(\rho) = \rho^{\gamma}, \; \gamma = 1.4
+$$ 
+
+Ниже приведены результаты численных экспериментов, а именно таблицы с ошибками (нормами разности между разностным решением и точным решением дифференциальной задачи на последнем временном слое; нормы $C, L_{2}, W_{2}^{1}$) для различных пар параметра $\mu \in \{0.1, 0.01, 0.001\}$ и зависимости $p(\rho)$. \\
 
 Для каждой такой пары также варьируются шаги сетки $\tau$ и $h$:
 $$ (\tau, h) \in \{ 10^{-1}, 10^{-2}, 10^{-3}, 10^{-4} \}^2 $$ 
 
 \newpage
+
+\subsubsection{Ошибки для $G$}
+\input{./tex/debug_test/table_G.tex}
+
+\subsubsection{Ошибки для $V$}
+\input{./tex/debug_test/table_V.tex}
+
+\subsubsection{Ошибки для $G$ методом вложенных сеток}
+\input{./tex/debug_test/table_G_nested.tex}
+
+\subsubsection{Ошибки для $V$ методом вложенных сеток}
+\input{./tex/debug_test/table_V_nested.tex}
+
+\subsection{Вывод}
+Исходя из полученных результатов, можно сделать вывод, что разностная схема сходится в зависимости от внешних параметров. При больших $\mu$ и малых $C$ сходимость безусловная, а при уменьшении $\mu$ или увеличении $C$ появляется условие сходимости $\tau < h$. Сходимость имеет порядок $\tau + h^2$.

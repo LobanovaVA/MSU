@@ -1,0 +1,46 @@
+\subsection{Численные эксперименты для первой задачи}
+
+Рассматривается задача (\ref{nonsmooth:1}).
+Зафиксируем выбранные опытным путём
+$$ \tau = 10^{-3}, \; h = 10^{-2}, \; \varepsilon = 10^{-2}$$
+
+Будем рассматривать зависимости 
+$ p(\rho) = C \rho $ и $p(\rho) = \rho^{\gamma}$
+и внешние параметры 
+$$ (C, \mu) \in \{1, 10\} \times \{0.1, 0.01\}, \; \gamma = 1.4$$
+
+
+\subsubsection{Время стабилизации и ошибки решения}
+Далее приведена таблицы значений $\left\|V^{n}\right\|_C$. 
+
+В каждой ячейке таблицы приведены значения для сеток
+$ \bar Q_{\tau, h} $, $ \bar Q_{\tau, h/2} $, 
+$ \bar Q_{\tau/2, h} $, $ \bar Q_{\tau/2, h/2} $ соответственно.
+
+\input{./tex/nonsmooth_test_1/residual_V_table.tex}
+\newpage
+\input{./tex/nonsmooth_test_1/residual_V_pics.tex}
+
+
+\subsubsection{Консервативность решения}
+Далее приведена таблица значений $\Delta_{m}(n)$. 
+
+В каждой ячейке таблицы приведены значения для сеток
+$ \bar Q_{\tau, h} $, $ \bar Q_{\tau, h/2} $, 
+$ \bar Q_{\tau/2, h} $, $ \bar Q_{\tau/2, h/2} $ соответственно.
+
+\input{./tex/nonsmooth_test_1/diff_mass_table.tex}
+\newpage
+\input{./tex/nonsmooth_test_1/diff_mass_pics.tex}
+
+
+\subsubsection{Динамика процесса решения}
+Рассмотрим $C = 1, \; \gamma = 1, \; \mu = 0.1$.
+Далее приведены срезы графиков $V$ и $G$ (динамика процесса) в разные моменты времени.
+\input{./tex/nonsmooth_test_1/cut_VG_pics.tex}
+
+
+\subsubsection{Цикличность решения}
+Для изучения зависимости периода от параметров $\mu$ и $C$ 
+рассмотрим графики $V$ и $G$ для $T = 60$.
+\input{./tex/nonsmooth_test_1/all_VG_pics.tex}

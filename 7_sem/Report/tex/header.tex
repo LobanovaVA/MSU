@@ -1,9 +1,9 @@
-\documentclass[specialist, subf, href, colorlinks=true, 14pt, times, mtpro, final]{disser}
+%\documentclass[specialist, subf, href, colorlinks=true, 14pt, times, mtpro, final]{disser}
+\documentclass[a4paper]{article}
 
 \usepackage[T2A]{fontenc}           % кодировка шрифтов
 \usepackage[utf8]{inputenc}         % кодировка
 \usepackage[english,russian]{babel} % правила переноса слов
-%\usepackage{newcomputermodern}
 
 \usepackage{amsmath}                % верстка математические формулы
 \usepackage{amsfonts}               % поддержка ажурного и готического шрифтов
@@ -15,7 +15,7 @@
 
 \usepackage{hyperref}
 \usepackage{graphicx}               % графики
-\graphicspath{{pics/}}
+\graphicspath{{pics/}, {tex/}}
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 
 \usepackage{tcolorbox}              % задание цвета
@@ -23,7 +23,7 @@
 \setcounter{tocdepth}{2}
 
 \usepackage[a4paper, mag=1000, includefoot, left=2cm, right=2.5cm, 
-	top=2cm, bottom=2cm, headsep=1cm, footskip=1cm]{geometry}
+	top=2cm, bottom=1.5cm, headsep=1cm, footskip=1cm]{geometry}
 
 \setlength{\parindent}{0em}
 \setlength{\parskip}{0mm}
@@ -47,3 +47,12 @@
 \def\FlawdyeText#1{\textcolor{\ColorSection}{#1}}
 
 \newcommand{\FC}[1]{\underline{\hspace{0.6cm}}#1\underline{\hspace{0.6cm}}}
+
+
+\usepackage{diagbox}
+\newcommand{\diagTH}{\backslashbox{$\tau$}{$h$}}
+\newcommand{\diagTHk}{\backslashbox{$\tau = h$}{$ $}}
+\newcommand{\diagPU}{\backslashbox{$\tilde \rho$}{$\tilde u$}}
+
+
+%\usepackage{{pack/newcomputermodern}}

@@ -1,0 +1,109 @@
+\section{Задача протекания}
+
+\subsection{Постановка задачи}
+Рассмотрим область $\Omega_x = [0,10]$. Для системы (\ref{system:1}) зададим начальные и граничные условия, которые определяются следующим образом:
+\begin{equation}
+\label{flowout:1}
+\begin{aligned}
+  & \rho(0, x) = 1, \; x \in [0; 10] \\
+  & u(0, x) = 0,    \; x \in [0; 10] \\
+  & u(t, 0) = \tilde u, \; t \in [0; T] \\
+  & \rho(t, 0) = \tilde \rho, \; t \in [0; T] \\
+  & \left.\frac{\partial u}{\partial x}\right|_{x=10} = 0,
+   \; t \in [0; T] \\
+\end{aligned}
+\end{equation}
+
+Где $\tilde v > 0$ и $\tilde \rho \geq 1$. 
+Также положим $f$ и $f_0$ из правой части (\ref{system:3}) тождественно равными нулю. \\
+
+Область $\Omega=[0, T] \times[0,10],$ а функции $f$ и $f_{0}$ тождественно равны $0 .$ Параметры $v(v>0)$ и $\tilde{\rho} \tilde{\rho} \geq 1$ задают скорость и плотность, "набегающего" потока.
+
+Вычисления будут проводится до времени $T = N_{0} \tau$, при котором решение перестанет зависеть от времени (выйдет на стационар).
+Критерием выхода на стационар будем считать
+$$
+  \left\| V^{N_{0}} - V_{m}^{N_{0}-50} \right\|_C =
+  \max_{m = 0 \dots M} \left| V_{m}^{N_{0}} - V_{m}^{N_{0}-50} \right| 
+  \leq \varepsilon
+$$
+где величина $\varepsilon$ является достаточно малой и определяется опытным путем. \\
+
+
+\subsection{Разностная схема}
+Для решения данной задачи необходимо модифицировать схему. 
+Уравнение $V_M^{n+1} = 0$ заменяется на 
+$$ V_{M}^{n+1} - V_{M-1}^{n+1} = 0$$
+
+Иные граничные условия при $m=0$:
+$$ G_0^{n+1} = \ln(\tilde \rho) $$
+$$ V_0^{n+1} = \tilde u $$
+
+Третье уравнение системы (\ref{system:4}) в силу условия (\ref{flowout:1}) заменяется на 
+\begin{equation*}
+  G_{t,M} + 0.5 [(V \hat G)_{\bar x, M} + V_{M} \hat G_{\bar x, M}] 
+      + 0.5h [ (GV)_{x \bar x, M-1} - 0.5  (GV)_{x \bar x, M-2}]  
+      + 0.5h [V_M G_{x \bar x, M-1} - 0.5 V_M G_{x \bar x, M-2}] = 0
+\end{equation*}
+\begin{equation*}
+  G_{t,M} + 0.5 [(V \hat G)_{\bar x, M} + V_{M} \hat G_{\bar x, M}]
+      + 0.5h [(GV)_{x \bar x, M-1} + V G_{x \bar x, M-1}]  
+     - 0.25h [(GV)_{x \bar x, M-2} + V G_{x \bar x, M-2}] = 0
+\end{equation*}
+\begin{multline*}
+  \frac{G_{M}^{n+1} - G_{M}^{n}}{\tau} 
+  + \frac12 \left[
+      \frac{V_{M}^{n} G_{M}^{n+1} - V_{M-1}^{n} G_{M-1}^{n+1}}{h} 
+    + V_{M}^{n} \frac{G_{M}^{n+1} - G_{M-1}^{n+1}}{h}
+  \right] +{} \\ {}+
+  \frac{h}{2} \left[
+      \frac{G_{M-2}^{n} V_{M-2}^{n} - 2 G_{M-1}^{n} V_{M-1}^{n} + G_{M}^{n} V_{M}^{n}}{h^2} +
+      V_{M}^{n} \frac{G_{M-2}^{n} - 2 G_{M-1}^{n} + G_{M}^{n}}{h^2}
+  \right] -{} \\ {}-
+  \frac{h}{4} \left[
+      \frac{G_{M-3}^{n} V_{M-3}^{n} - 2 G_{M-2}^{n} V_{M-2}^{n} + G_{M-1}^{n} V_{M-1}^{n}}{h^2} +
+      V_{M}^{n} \frac{G_{M-3}^{n} - 2 G_{M-2}^{n} + G_{M-1}^{n}}{h^2}
+  \right] = 0
+\end{multline*}
+
+\begin{equation*}
+  G_{M-1}^{n+1} \left( - \frac{V_{M-1}^{n} + V_{M}^{n}}{2h} \right) +
+  G_{M}^{n+1} \left( \frac{1}{\tau} + \frac{V_{M}^{n}}{h} \right) = B_{M}^{n}
+\end{equation*}
+\begin{multline*}
+   B_{M}^{n} =  G_{M}^{n} \left( \frac{1}{\tau} \right)-
+  \frac{1}{2h} \left[
+    G_{M-2}^{n} V_{M-2}^{n} - 2 G_{M-1}^{n} V_{M-1}^{n} + G_{M}^{n} V_{M}^{n} + 
+    V_{M}^{n} (G_{M-2}^{n} - 2 G_{M-1}^{n} + G_{M}^{n})
+    \right] +{} \\ {}+
+  \frac{1}{4h} \left[
+    G_{M-3}^{n} V_{M-3}^{n} - 2 G_{M-2}^{n} V_{M-2}^{n} + G_{M-1}^{n} V_{M-1}^{n} + 
+    V_{M}^{n} (G_{M-3}^{n} - 2 G_{M-2}^{n} + G_{M-1}^{n})
+    \right]
+\end{multline*}
+
+
+\newpage
+\subsection{Численные эксперименты}
+Рассматривается задача (\ref{flowout:1}).
+Зафиксируем $$ \tau = 10^{-3}, \; h = 10^{-2}, \; \varepsilon = 10^{-2}$$
+
+Будем рассматривать зависимости 
+$ p(\rho) = C \rho $ и $p(\rho) = \rho^{\gamma}$
+и внешние параметры 
+$$ (C, \mu) \in \{1, 10, 100\} \times \{0.1, 0.01, 0.001\}, \; \gamma = 1.4$$
+
+\subsubsection{Стабилизация решения}
+Далее приведены таблицы зависимости времени стабилизации $N_0 \tau$ 
+от параметров $\mu$, $C$, $\tilde \rho$ и $\tilde u$.
+\input{./tex/flowout_test/residual_V.tex}
+
+\subsubsection{Динамика процесса}
+Рассмотрим случай $C = 1$, $\gamma = 1$, $\mu = 0.1$, $\varepsilon = 10^{-2}$, $\tilde \rho = 1$, $\tilde u = 1$.
+Далее приведены срезы графиков $V$ и $G$ (динамика процесса) в разные моменты времени.
+\input{./tex/flowout_test/cut_VG_pics.tex}
+
+
+\subsection{Вывод}
+C уменьшением параметра $\mu$ время стабилизации увеличивается. 
+Не замечено зависимости времени стабилизации от параметра $C$.
+Общей зависимости от пары параметров $(\tilde \rho, \tilde u)$ замечено не было.
