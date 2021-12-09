@@ -1,0 +1,4 @@
+&
+\begin{tabular}{c}
+ \texttt{1.855} \\ \texttt{7.520} \\ \texttt{2.014} \\ \texttt{6.809} \\ \texttt{1.852} \\ \texttt{6.205} \\ \texttt{1.750} \\ \texttt{6.204} \\ \texttt{1.449} \\ \texttt{5.803} \\
+\end{tabular}

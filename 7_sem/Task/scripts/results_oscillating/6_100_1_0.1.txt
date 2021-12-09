@@ -1,0 +1,4 @@
+&
+\begin{tabular}{c}
+ \texttt{3.052} \\ \texttt{0.777} \\ \texttt{0.352} \\ \texttt{0.215} \\ \texttt{0.132} \\ \texttt{0.111} \\ \texttt{0.096} \\ \texttt{0.072} \\ \texttt{0.053} \\ \texttt{0.059} \\
+\end{tabular}

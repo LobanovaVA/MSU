@@ -1,0 +1,14 @@
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\diagPU & \texttt{1} & \texttt{2} & \texttt{3} & \texttt{4} \\
+\hline
+ \texttt{1} & \texttt{8.2970} & \texttt{8.5640} & \texttt{7.7100} & \texttt{5.8740} \\ \hline
+ \texttt{2} & \texttt{7.3600} & \texttt{5.6920} & \texttt{6.0310} & \texttt{4.4830} \\ \hline
+ \texttt{3} & \texttt{5.4700} & \texttt{4.5120} & \texttt{35.6710} & \texttt{19.2220} \\ \hline
+ \texttt{4} & \texttt{18.2710} & \texttt{13.9400} & \texttt{12.5480} & \texttt{12.3810} \\ \hline
+\end{tabular}
+\caption{Время стабилизации при $C = 100$, $\gamma = 1$ и~$\mu = 0.01$.}
+\end{table}
+

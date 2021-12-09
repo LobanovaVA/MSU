@@ -1,0 +1,10 @@
+ & \texttt{392.5260} & \texttt{7.733281e-02} & \texttt{3.001341e-02} & \texttt{2.015440e-02} & \texttt{1.000271e-02} \\
+ & \texttt{-4.813085e-03} & \texttt{-4.901972e-03} & \texttt{-4.910707e-03} & \texttt{-4.911720e-03} & \texttt{-4.912008e-03} \\
+ & \texttt{392.5280} & \texttt{7.729101e-02} & \texttt{3.001539e-02} & \texttt{2.016473e-02} & \texttt{1.000231e-02} \\
+ & \texttt{-4.763098e-03} & \texttt{-4.869447e-03} & \texttt{-4.885623e-03} & \texttt{-4.890371e-03} & \texttt{-4.892518e-03} \\
+ & \texttt{392.0380} & \texttt{7.784926e-02} & \texttt{3.207508e-02} & \texttt{2.176397e-02} & \texttt{1.000143e-02} \\
+ & \texttt{-2.643366e-03} & \texttt{-2.672976e-03} & \texttt{-2.670151e-03} & \texttt{-2.667561e-03} & \texttt{-2.666530e-03} \\
+ & \texttt{392.0440} & \texttt{7.778733e-02} & \texttt{3.206222e-02} & \texttt{2.176099e-02} & \texttt{1.000033e-02} \\
+ & \texttt{-2.594086e-03} & \texttt{-2.641625e-03} & \texttt{-2.646474e-03} & \texttt{-2.647439e-03} & \texttt{-2.648000e-03} \\
+\hline
+

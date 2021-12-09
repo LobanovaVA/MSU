@@ -1,0 +1,14 @@
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\diagPU & \texttt{1} & \texttt{2} & \texttt{3} & \texttt{4} \\
+\hline
+ \texttt{1} & \texttt{8.2250} & \texttt{56.1530} & \texttt{13.9560} & \texttt{7.5610} \\ \hline
+ \texttt{2} & \texttt{6.4260} & \texttt{33.8840} & \texttt{10.5830} & \texttt{6.2960} \\ \hline
+ \texttt{3} & \texttt{5.3750} & \texttt{25.8120} & \texttt{9.3970} & \texttt{5.7780} \\ \hline
+ \texttt{4} & \texttt{4.9920} & \texttt{4.2930} & \texttt{8.7300} & \texttt{5.4690} \\ \hline
+\end{tabular}
+\caption{Время стабилизации при $C = 1$, $\gamma = 1.4$ и~$\mu = 0.01$.}
+\end{table}
+
