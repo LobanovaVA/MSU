@@ -1,0 +1,110 @@
+\section{Введение}
+
+\subsection{Постановка задачи}
+
+В работе будет рассматриваться разностная схема с центральными разностями ($\ln{\rho}$, $u$) для решения начально-краевых задач для системы уравнений, описывающей нестационарное двумерное движение вязкого баротропного газа:
+
+\begin{equation} 
+\label{eq:task}
+\begin{dcases}
+    \deriv{\rho}{t} + \div (\rho \vec{u}) = \rho f_0; \\
+    \rho \bigg[ \deriv{\vec{u}}{t} + (\vec{u}, \, \nabla) \vec{u} \bigg] + \nabla p = L \vec{u} + \rho \vec{f}; \\
+    L \vec{u} = \div (\mu \nabla \vec{u}) + \frac{1}{3} \nabla (\mu \div \vec{u}); \\
+    p = p (\rho).
+\end{dcases}
+\end{equation}
+
+\bigskip
+В данной схеме известными считаются:
+\begin{itemize}
+	\item $\mu$ -- коэффициент вязкости газа, который считаем известной поло­жительной константой.
+	\item $p$ -- функция давления газа.
+	Будем использовать две возможные зависимости: \\
+	$p(\rho) = C\rho$, где $C$ -- неотрицательная константа или \\
+	$p(\rho) = \rho ^{\gamma}$, где $\gamma = 1.4$.
+	\item $\vec{f} = \vec{f(x)}$ -- вектор внешних сил, который является функцией переменных Эйлера 
+	$(t,\vec{x}) \in \Omega = \Omega_t \times \Omega_{\vec{x}} \subset \bR \times \bR^d$.
+\end{itemize}
+
+Неизвестными же считаются функции переменных Эйлера:
+\begin{itemize}
+	\item $\rho$ -- функция плотности;
+	\item $\vec{u} = (u_1, \, \ldots, \, u_d)$ -- функция скорости.
+\end{itemize}
+
+Систему~\eqref{eq:task} можно переписать в виде
+\begin{equation*} 
+\label{eq:intermediate}
+\begin{dcases}
+    \deriv{\rho}{t} + \sum_{i = 1}^{d} \deriv{\rho u_i}{x_i} = \rho f_0; \\
+    \deriv{\rho u_s}{t} + \sum_{i = 1}^{d} \deriv{\rho u_i u_s}{x_i} + \deriv{p}{x_s} = \mu \bigg( \sum_{i = 1}^{d} \deriv{^2 u_s}{x_i^2} + \frac{1}{3} \sum_{i = 1}^{d} \deriv{^2 u_i}{x_s \partial x_i} \bigg) + \rho f_s, & s = 1, \, \ldots, \, d.
+\end{dcases}
+\end{equation*}
+
+Сделав замену $g = \ln \rho$ и ряд преобразований, систему~\eqref{eq:task} можно переписать в виде (см.~\cite{Popov})
+\begin{equation} 
+\label{eq:main}
+\begin{dcases}
+    \deriv{g}{t} + \frac{1}{2} \sum_{i = 1}^{d} \bigg( u_i \deriv{g}{x_i} + \deriv{u_i g}{x_i} + (2 - g) \deriv{u_i}{x_i} \bigg) = f_0; \\
+    \begin{multlined}[b]
+    \deriv{u_s}{t} + \frac{1}{3} \bigg( u_s \deriv{u_s}{x_s} + \deriv{u_s^2}{x_s} \bigg) + \frac{1}{2} \sum_{i = 1, \, i \not = s}^{d} \bigg( u_i \deriv{u_s}{x_i} + \deriv{u_i u_s}{x_i} - u_s \deriv{u_i}{x_i} \bigg) \, + \\ + p_\rho (e^g) \deriv{g}{x_s} = \mu e^g \bigg( \frac{4}{3} \deriv{^2 u_s}{x_s^2} + \sum_{i = 1, \, i \not = s}^{d} \bigg( \deriv{^2 u_s}{x_i^2} + \frac{1}{3} \deriv{^2 u_i}{x_s \partial x_i} \bigg) \bigg) + f_s,
+    \end{multlined}
+    & s = 1, \, \ldots, \, d.
+\end{dcases}
+\end{equation}
+
+Дополним систему~\eqref{eq:task} начальными и граничными условиями:
+\begin{equation} \label{eq:terms}
+\begin{aligned}
+    (\rho, \, \vec{u})|_{t = 0} = (\rho_0, \, \vec{u}_0), \quad \vec{x} \in \Omega_x; \\
+    u (t, \, \vec{x}) = 0, \quad (t, \, \vec{x}) \in \Omega_t \times \partial \Omega_x.
+\end{aligned}
+\end{equation}
+
+В качестве областей $\Omega_t$ и $\Omega_x$ рассмотрим $[0; \, T] \subset \bR$ и $\Omega_{x_1} \times \ldots \times \Omega_{x_d} \subset \bR^d$, где $\Omega_{x_s} = [0; \, X_s]$, $s = 1, \, \ldots, \, d$, соответственно.
+
+
+
+
+\subsection{Основные обозначения}\label{sec:notation}
+Введем на областях $\Omega_t = [0; T]$ и $\Omega_{x_s} = [0; X_s]$, 
+равномерные сетки с шагом $\tau$ и $h_s$ соответственно:
+$$ \omega_{\tau} = \{n \tau \,|\, n = 0,\dots,N\},   \;\text{где}\; N \tau = T  $$
+$$ \omega_{h_s}  = \{m h_s  \,|\, m = 0,\dots,M_s\}, \;\text{где}\; M_s h_s = X_s $$
+
+Обозначим 
+$$ 
+   \vec{h} = (h_1, \, \ldots, \, h_d), \quad
+   \omega_{\vec{h}} = (\omega_{h_1} \times \, \ldots \times \, \omega_{h_d}), \quad
+   \omega_{\tau, \, h} = \omega_{\tau} \times \omega_h
+$$
+
+$$ \gamma_{\vec{h}, \, s}^- = \omega_{h_1}     \times \ldots \times \omega_{h_{s-1}} 
+        \times \{ 0 \} \times \omega_{h_{s+1}} \times \ldots \times \omega_{h_d}     $$
+
+$$ \gamma_{\vec{h}, \, s}^+ = \omega_{h_1}     \times \ldots \times \omega_{h_{s-1}}
+      \times \{ X_s \} \times \omega_{h_{s+1}} \times \ldots \times \omega_{h_d}    $$
+
+$$ \gamma_{\vec{h}, \, s} = \gamma_{\vec{h}, \, s}^- \cup \gamma_{\vec{h}, \, s}^+, \quad
+   \gamma_{\vec{h}} = \gamma_{\vec{h}, \, 1} \cup \ldots \cup \gamma_{\vec{h}, \, d}  $$ 
+
+
+Для сокращения записи обозначим 
+$m = (m_1, \, \ldots, \, m_d)$, $m \pm q_s = (m_1, \, \ldots, m_{s-1}, \, m_s \pm q, \, m_{s+1}, \, \ldots, \, m_d)$,
+значение для произвольной функции $g$ в узле $(n, \, m)$ через $g^n_m$, $g^{n+1}_m$ через $\widehat{g}$. 
+
+Введем обозначения для среднего значения величин сеточной функции в двух соседних узлах:
+\begin{align*}
+  g_{\avg_s}      = \frac{g^n_m + g^n_{m + 1_s}}{2}    \,,\quad
+  g_{\overline{\avg}_s} = \frac{g^n_m + g^n_{m - 1_s}}{2}            
+\end{align*}
+и для разностных операторов:
+\begin{align*}
+    g_t = \frac{g^{n+1}_m - g^n_m}{\tau}&  \,,\quad
+    g_{x_s} = \frac{g^n_{m + 1_s} - g^n_m}{h_s}, \\
+    g_{\overline{x}_s} = \frac{g^n_m - g^n_{m - 1_s}}{h_s}&  \,,\quad 
+    g_{\mathring{x}_s} = \frac{g^n_{m + 1_s} - g^n_{m - 1_s}}{2 h_s},
+\end{align*}
+\begin{equation*}
+    g_{x_s \overline{x}_s} = (g_{x_s})_{\overline{x}_s} = \frac{g^n_{m + 1_s} - 2 g^n_m + g^n_{m - 1_s}}{h_s^2}.
+\end{equation*}

@@ -1,0 +1,46 @@
+\section{Задача протекания}
+
+\subsection{Постановка задачи}
+Задана область $$\Omega = \Omega_{01} \cup \Omega_{02} \cup \Omega_{11} \cup \Omega_{12} \cup \Omega_{10} \cup \Omega_{10} \cup \Omega_{20} $$
+
+Неизвестные функции: плотность $\rho$ и вектор скорости $\vec{u}$ являются функциями переменных Эйлера $(t, x) \in Q = [0, T] \times \Omega$.
+
+Граничные условия для неизвестного решения: 
+$$
+	\rho \big|_{\Gamma-} = \rho_\gamma   \,, \quad
+	u_1 \big|_{\Gamma-} = w              \,, \quad
+	\deriv{u_1}{x} \big|_{\Gamma+} = 0
+$$
+На оставшейся границе компоненты скорости равны нулю, а функция плотности считается неизвестной.
+
+\begin{figure}[h!] \centering
+	\includegraphics[scale=0.6]{area_2.pdf}
+	\captionof{figure}{Заданная область}
+\end{figure}
+
+
+\subsection{Численные эксперименты}
+Будем рассматривать зависимости $ p(\rho) = C \rho, \; C \in \{1, 10\} $, а также параметры  $\mu \in \{0.1, 0.01, 0.001\}$, $\rho_\gamma \in \{1, 10\}$. Если предыдущее состояние газа не отличается от текущего на $\epsilon = 10^{-3}$, то останавливаем расчёт. При фиксированных $\tau$, $h_1 = h_2 = h$ будем исследовать момент завершения программы.  \\
+
+%Значение времени, помеченное $*$ означает, что схема разошлась в этот момент времени. \\
+
+Будут приведены графики на рассматриваемой области, иллюстрирующие изменение плотности и векторов скорости от момента времени.\\
+
+Для решения системы $Ax = b$ использовался метод $BiCGSTab$ + $ILUT$ предобусловливатель из библиотеки Eigen (см. \cite{Eigen}) с параметрами $eps = 10^{-8}$, $iter = 2000$.
+
+\newpage
+
+\subsection{$C = 1$, $\mu = 0.10$, $w = 0.5$, $\rho_\gamma = 1$, $\tau = 0.010$, $h = 0.050$}
+
+\begin{figure}[h!] \centering \includegraphics[scale=0.9]{tabulars-19.png} \end{figure} \newpage
+\begin{figure}[h!] \centering \includegraphics[scale=0.9]{tabulars-20.png} \end{figure} \newpage
+
+\subsection{$C = 1$, $\mu = 0.01$, $w = 0.5$, $\rho_\gamma = 1$, $\tau = 0.005$, $h = 0.025$}
+\begin{figure}[h!] \centering \includegraphics[scale=0.9]{tabulars-23.png} \end{figure} \newpage
+\begin{figure}[h!] \centering \includegraphics[scale=0.9]{tabulars-24.png} \end{figure} \newpage
+\begin{figure}[h!] \centering \includegraphics[scale=0.9]{tabulars-25.png} \end{figure} \newpage
+
+\newpage
+
+%\input{./tex/debug_test/table_G.tex}
+

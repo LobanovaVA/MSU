@@ -1,0 +1,106 @@
+\section{Отладочный тест}
+
+\subsection{Постановка задачи}
+Зададим функции
+\begin{equation} \label{eq:task1}
+\begin{aligned}
+\widetilde{\rho}\; (t, \, x_1, \, x_2) &= (\cos (2 \pi x_1) + 1.5) (\sin (2 \pi x_2) + 1.5) \exp (t);\\
+\widetilde{u}_2 (t, \, x_1, \, x_2) &= \sin (2 \pi x_1) \sin (2 \pi x_2) \exp (t); \\
+\widetilde{u}_2 (t, \, x_1, \, x_2) &= \sin (2 \pi x_1) \sin (2 \pi x_2) \exp (-t);
+\end{aligned}
+\end{equation}
+
+Определим функции $\widetilde{f}_0$, $\widetilde{f}_1$, $\widetilde{f}_2$ так,
+чтобы они удовлетворяли системе \eqref{eq:main} с правой частью, составленной из этих функций, а именно:
+\begin{equation}
+\begin{dcases}
+\deriv{\widetilde{\rho}}{t}
++
+\sum_{i = 1}^{d} \deriv{\widetilde{\rho} \widetilde{u}_i}{x_i}
+=
+\widetilde{\rho} \widetilde{f}_0; \\
+%
+%
+%
+\deriv{\widetilde{\rho} \widetilde{u}_s}{t}
++
+\sum_{i = 1}^{d} \deriv{\widetilde{\rho} \widetilde{u}_i \widetilde{u}_s}{x_i}
++
+\deriv{p}{x_s}
+=
+\mu \bigg( \sum_{i = 1}^{d} \deriv{^2 \widetilde{u}_s}{x_i^2}
++
+\frac{1}{3} \sum_{i = 1}^{d} \deriv{^2 \widetilde{u}_i}{x_s \partial x_i} \bigg)
++
+\widetilde{\rho} \widetilde{f}_s,
+& s = 1, \, 2.
+\end{dcases}
+\end{equation}
+
+Выпишем отдельно все частные производные, необходимые для подсчета функций $\widetilde{f}_s$:
+\begin{align*}
+    \dfrac{\partial \tilde{\rho}}{\partial t} \;
+          &= \tilde{\rho}
+  & \dfrac{\partial \tilde{g}}{\partial t} \;
+          &= \frac{1}{\tilde{\rho}} \dfrac{\partial \tilde{\rho}}{\partial t} = 1 \\  
+    \dfrac{\partial \tilde{\rho}}{\partial x_1}
+          &= -2 \pi \sin (2 \pi x_1) (1.5 + \sin(2 \pi x_2)) \exp (t)
+  & \dfrac{\partial \tilde{g}}{\partial x_1}
+          &= \frac{1}{\tilde{\rho}} \dfrac{\partial \tilde{\rho}}{\partial x_1} \\
+    \dfrac{\partial \tilde{\rho}}{\partial x_2}
+          &=  2 \pi (\cos (2 \pi x_1) + 1.5) \cos(2 \pi x_2)) \exp (t)
+  & \dfrac{\partial \tilde{g}}{\partial x_2}
+          &= \frac{1}{\tilde{\rho}} \dfrac{\partial \tilde{\rho}}{\partial x_2}
+\end{align*}
+
+\begin{align*}
+    \dfrac{\partial \tilde{u_1}}{\partial t}
+          &= u_1
+  & \dfrac{\partial \tilde{u_2}}{\partial t}
+          &= -u_2 \\
+    \dfrac{\partial \tilde{u_1}}{\partial x_1}
+          &= 2 \pi \cos (2 \pi x_1) \sin(2 \pi x_2) \exp (t)
+  & \dfrac{\partial \tilde{u_2}}{\partial x_1}
+          &= 2 \pi \cos (2 \pi x_1) \sin(2 \pi x_2) \exp (-t) \\
+    \dfrac{\partial \tilde{u_1}}{\partial x_2}
+          &= 2 \pi \sin (2 \pi x_1) \cos(2 \pi x_2) \exp (t)
+  & \dfrac{\partial \tilde{u_2}}{\partial x_2}
+          &= 2 \pi \sin (2 \pi x_1) \cos(2 \pi x_2) \exp (-t) \\
+\end{align*}
+
+Выписывать явный вид для функций $\widetilde{f}_s$ не имеет смысла, так они являются комбинациями описанных выше функций и производных и намного проще реализовать отдельные части этих комбинаций.
+
+Таким образом, функции \eqref{eq:task1} являются гладким точным решением дифференциальной задачи  \eqref{eq:main} с начальными и граничными условиями:
+\begin{equation*}
+\begin{aligned}
+  & \tilde{\rho}(0, \vec{x}) = (\cos (2 \pi x_1) + 1.5) (\sin (2 \pi x_2) + 1.5) \\
+  & \tilde{u_1}(0, \vec{x}) = \tilde{u_2}(0, \vec{x}) = \sin (2 \pi x_1) \sin (2 \pi x_2) \\
+\end{aligned}
+\end{equation*}
+
+
+
+\subsection{Численные эксперименты}
+Будем рассматривать зависимости $ p(\rho) = C \rho, \; C \in \{1, 10\} $. \\
+
+Ниже приведены результаты численных экспериментов, а именно таблицы с ошибками (нормами разности между разностным решением и точным решением дифференциальной задачи на последнем временном слое; нормы $C, L_{2}, W_{2}^{1}$) для различных пар параметра $\mu \in \{0.1, 0.01, 0.001\}$ и зависимости $p(\rho)$. \\
+
+Для решения системы $Ax = b$ использовался метод $BiCGSTab$ + $ILUT$ предобусловливатель из библиотеки Eigen (см. \cite{Eigen}) с параметрами $eps = 10^{-8}$, $iter = 2000$.
+
+
+\newpage
+
+\subsubsection{Ошибки для $G$}
+\input{./tex/debug_test/table_G.tex}
+
+\subsubsection{Ошибки для $V_1$}
+\input{./tex/debug_test/table_V1.tex}
+
+\subsubsection{Ошибки для $V_2$}
+\input{./tex/debug_test/table_V2.tex}
+
+
+\subsection{Вывод}
+Исходя из полученных результатов, можно сделать вывод, что разностная схема сходится в зависимости от внешних параметров $\mu$ и $C$. Условия на сходимость можно выразить как: $h_i > 0.1$, $\tau > 0.0125$, $A < \frac{h}{\tau} < B$, для некоторых $A$, $B$.  Сходимость имеет порядок $\tau + h_1^2 + h_2^2$.
+
+\newpage
